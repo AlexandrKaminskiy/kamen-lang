@@ -2,6 +2,8 @@
 #include <stdio.h>
 %}
 
+%x MULTIPLE_STRING
+
 %%
 #[^\n]*                                         { printf("ONE STRING COMMENT: %s\n", yytext); }
 begin                                           { printf("KEYWORD begin: %s\n", yytext); }
@@ -41,6 +43,11 @@ mod                                             { printf("OPERATOR mod : %s\n", 
 [-]                                             { printf("OPERATOR MINUS : %s\n", yytext); }
 [/]                                             { printf("OPERATOR DIV : %s\n", yytext); }
 [+]                                             { printf("OPERATOR PLUS : %s\n", yytext); }
+
+
+"'''"                                           { printf("MULTIPLE_STRING : "); BEGIN(MULTIPLE_STRING); }
+<MULTIPLE_STRING>.                              { printf("%s", yytext); }
+<MULTIPLE_STRING>"'''"                          { BEGIN(INITIAL); }
 
 ["][^"]*["]                                     { printf("STRING LITERAL: %s\n", yytext); }
 [0-9]+                                          { printf("INTEGER NUMBER: %s\n", yytext); }
