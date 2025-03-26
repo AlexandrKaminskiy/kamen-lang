@@ -1,0 +1,36 @@
+function main(Integer i, Integer j) : Integer
+begin
+
+    printf("2e234243 " fiewjn  "ewfnj)
+
+    var s: String := '''Babuba Babuba
+    Babuba Babuba
+    Babuba Babuba''' 
+
+    var b: Boolean
+
+    b := true
+
+    if i - j < 5
+    begin
+        b := false
+    end
+
+    for i := 0, i < 7
+    begin
+        while b
+        begin
+            print(b)
+        end
+    end
+
+    j: Integer := 1 + 3 - 8 / (1+2+4/2) # Test comments 
+
+    k: Double := 23.9
+    k := 0.9
+    k := .9
+    k := .
+    endk := 2.
+
+    return j
+end
