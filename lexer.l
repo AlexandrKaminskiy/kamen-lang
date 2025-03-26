@@ -39,10 +39,14 @@ Context                                         { printf("TYPE Context: %s\n", y
 mod                                             { printf("OPERATOR mod : %s\n", yytext); }
 [:][=]                                          { printf("OPERATOR ASSIGN : %s\n", yytext); }
 [*]                                             { printf("OPERATOR MULT : %s\n", yytext); }
+">="                                            { printf("OPERATOR BIGGER OR EQUALS : %s\n", yytext); }
+"<="                                            { printf("OPERATOR LESS OR EQUALS : %s\n", yytext); }
 [=]                                             { printf("OPERATOR EQUALS : %s\n", yytext); }
 [-]                                             { printf("OPERATOR MINUS : %s\n", yytext); }
 [/]                                             { printf("OPERATOR DIV : %s\n", yytext); }
 [+]                                             { printf("OPERATOR PLUS : %s\n", yytext); }
+[>]                                             { printf("OPERATOR BIGGER : %s\n", yytext); }
+[<]                                             { printf("OPERATOR LESS : %s\n", yytext); }
 
 
 "'''"                                           { printf("MULTIPLE_STRING : "); BEGIN(MULTIPLE_STRING); }
@@ -54,8 +58,9 @@ mod                                             { printf("OPERATOR mod : %s\n", 
 [0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); }
 [a-zA-Z_][a-zA-Z_0-9]*                          { printf("IDENTIFIER: %s\n", yytext); }
 
+[ \t\n\v\f\r]                                   {  }
+.                                               {     fprintf(stderr, "Error! Incorrect symbol: '%s' on line %d\n", yytext, yylineno); YY_FATAL_ERROR("Incorrect symbol"); }
 
-.                                               {  }
 %%
 
 int main(int argc, char **argv) {

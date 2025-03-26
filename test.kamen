@@ -1,7 +1,7 @@
 function main(Integer i, Integer j) : Integer
 begin
 
-    printf("2e234243 " fiewjn  "ewfnj)
+    printf("2e234243 " fiewjn  "ewfnj"")
 
     var s: String := '''Babuba Babuba
     Babuba Babuba
@@ -29,7 +29,7 @@ begin
     k: Double := 23.9
     k := 0.9
     k := .9
-    k := .
+    #k := .
     endk := 2.
 
     return j
