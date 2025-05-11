@@ -1,11 +1,9 @@
 function hui(var variable: Integer, var variable2: Float): Context
 begin
-    var lesh: Integer
-    lesh := 10
     while ()
     begin
-        invoke()
+        #invoke()
         var lesha: Integer
     end
-    return 10
+    return 20
 end

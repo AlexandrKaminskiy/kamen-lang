@@ -15,8 +15,18 @@ typedef enum {
     NT_BODY,
     NT_ASSIGN_VARIABLE,
     NT_DECLARE_VARIABLE,
-    NT_EXPRESSION
+    NT_EXPRESSION,
+    NT_WHILE_LOOP,
+    NT_CONDITION_EXPRESSION,
+    NT_INVOCATION,
 } NonTerminal;
+
+typedef enum {
+    TERMINAL = 1,
+    NON_TERMINAL,
+    OPERATOR,
+    INVOCATION
+} ExpressionType;
 
 typedef struct {
     const char *name;
@@ -46,19 +56,29 @@ typedef struct {
 //     Value value;
 // } VariableInitialization;
 
-typedef union {
-    VariableDeclaration variable_declaration;
-    VariableAssignation variable_assignation;
-} Member;
 
 typedef struct AstNode AstNode;
+typedef union Member member;
 
 struct AstNode {
-    AstNode *root;
     AstNode *tree;
     AstNode *next;
     NonTerminal non_terminal;
-    Member member;
+    Member *member;
+};
+
+
+typedef union {
+    ExpressionType expression_type;
+    AstNode *node;
+    char *op;
+    Value value;
+} Expression;
+
+union Member {
+    VariableDeclaration variable_declaration;
+    VariableAssignation variable_assignation;
+    Expression expression;
 };
 
 inline AstNode root_node = AstNode();
@@ -84,6 +104,19 @@ AstNode *create_subprog_param_node();
 
 AstNode *add_body_node(AstNode *body);
 
-AstNode* add_expression_node();
 
-AstNode* create_function_body_node();
+AstNode *create_function_body_node();
+
+AstNode *create_nodes(NonTerminal non_terminal, std::initializer_list<AstNode *> nodes);
+
+AstNode *add_equal_node(AstNode *main, AstNode *node);
+
+AstNode *add_expression_node();
+
+AstNode *add_expression_node(float value);
+
+AstNode *add_expression_node(char *op);
+
+AstNode *add_expression_node(AstNode *node);
+
+AstNode *add_expression_node(AstNode *left, AstNode *right, char *op);

@@ -1,6 +1,5 @@
 %{
 
-
 #include "functions.h"
 
 extern FILE *yyin;
@@ -60,11 +59,18 @@ void yyerror(char *);
 %token NOT
 %token AND
 %token OR
-%token MOD
-%token MULT
-%token DIV
-%token PLUS
-%token MINUS
+
+%token <string> PLUS
+%token <string> MINUS
+%token <string> MOD
+%token <string> MULT
+%token <string> DIV
+
+%left PLUS
+%left MINUS
+%left MOD
+%left MULT
+%left DIV
 
 %type <num> var_type
 %type <node> program
@@ -82,6 +88,8 @@ void yyerror(char *);
 %type <node> comment
 %type <node> invocation
 %type <node> while_loop
+
+%type <frac> arith_literal
 
 %%
 
@@ -112,20 +120,20 @@ subprog_params: { printf("End of the subprog_params\n"); $$ = create_subprog_par
       ;
 
 
-function_body: body_list RETURN expression { printf("End of the function_body\n"); $$ = create_node(NT_FUNCTION_BODY); }
+function_body: body_list RETURN expression { printf("End of the function_body\n"); $$ = create_nodes(NT_FUNCTION_BODY, {$1, $3}); }
       ;
 
-body_list:
-      | body_list body  { printf("End of the body_list"); $$ = create_node(NT_BODY_LIST); }
+body_list: { printf("1 End of the body_list"); $$ = create_node(NT_BODY_LIST); }
+      | body_list body  { printf("2 End of the body_list"); $$ = add_equal_node($1, $2); }
       ;
 
-body: declare_variable
-      | assign_variable { $$ = add_body_node($1); }
+body: declare_variable { $$ = create_nodes(NT_BODY, {$1}); }
+      | assign_variable { $$ = create_nodes(NT_BODY, {$1}); }
       | condition_expression
       | expression
-      | loop_operator
-      | comment
-      | invocation
+      | loop_operator { $$ = create_nodes(NT_BODY, {$1}); }
+      | comment { $$ = nullptr; }
+      | invocation { $$ = create_nodes(NT_BODY, {$1}); }
       ;
 
 describe_variable: VAR describe_variable ASSIGN expression {
@@ -148,21 +156,31 @@ declare_variable: VAR IDENTIFIER COLON var_type {
     $$ = add_variable_declaration_node($4, $2);
 };
 
-expression: INTEGER_NUMBER {
-    AstNode* node = add_expression_node();
-    $$ = node;
-};
+expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
+    | expression MINUS expression { $$ = add_expression_node($1, $3, $2) }
+    | expression MULT expression { $$ = add_expression_node($1, $3, $2) }
+    | expression DIV expression { $$ = add_expression_node($1, $3, $2) }
+    | arith_literal { $$ = add_expression_node($1); }
+    | invocation { $$ = create_nodes(NT_EXPRESSION, {$1}); }
+    | OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS { $$ = add_expression_node($2); }
+    | IDENTIFIER
+    ;
+
+
+arith_literal: INTEGER_NUMBER { $$ = (float) $1; }
+    | DOUBLE_NUMBER { $$ = $1; }
+    ;
 
 loop_operator: while_loop { printf("End of loop\n"); }
       ;
 
-while_loop: WHILE OPEN_ROUND_BRACKETS condition_expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END
+while_loop: WHILE OPEN_ROUND_BRACKETS condition_expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); };
 
-invocation: IDENTIFIER OPEN_ROUND_BRACKETS CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); };
+invocation: IDENTIFIER OPEN_ROUND_BRACKETS CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); $$ = create_node(NT_INVOCATION); };
 
-condition_expression: { };
+condition_expression: { $$ = create_node(NT_CONDITION_EXPRESSION); };
 
-comment: { };
+comment: ONE_STRING_COMMENT { printf("Comment ignoring\n") };
 
 var_type: STRING { $$ = STRING; }
         | INTEGER { $$ = INTEGER; }
