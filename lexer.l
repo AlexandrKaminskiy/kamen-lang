@@ -25,12 +25,12 @@ PI                                              { printf("CONSTANT PI: %s\n", yy
 true                                            { printf("CONSTANT true: %s\n", yytext); return TRUE;}
 false                                           { printf("CONSTANT false: %s\n", yytext); return FALSE;}
 
-String                                          { printf("TYPE String: %s\n", yytext); return STRING;}
-Integer                                         { printf("TYPE Integer: %s\n", yytext); return INTEGER;}
-Float                                           { printf("TYPE Float: %s\n", yytext); return FLOAT;}
-Double                                          { printf("TYPE Double: %s\n", yytext); return DOUBLE;}
-Shape                                           { printf("TYPE Shape: %s\n", yytext); return SHAPE;}
-Context                                         { printf("TYPE Context: %s\n", yytext); return CONTEXT;}
+String                                          { printf("TYPE String: %s\n", yytext); yylval.string = strdup(yytext); return STRING;}
+Integer                                         { printf("TYPE Integer: %s\n", yytext); yylval.string = strdup(yytext); return INTEGER;}
+Float                                           { printf("TYPE Float: %s\n", yytext); yylval.string = strdup(yytext); return FLOAT;}
+Double                                          { printf("TYPE Double: %s\n", yytext); yylval.string = strdup(yytext); return DOUBLE;}
+Shape                                           { printf("TYPE Shape: %s\n", yytext); yylval.string = strdup(yytext); return SHAPE;}
+Context                                         { printf("TYPE Context: %s\n", yytext); yylval.string = strdup(yytext); return CONTEXT;}
 
 [,]                                             { printf("OPERATOR COMMA : %s\n", yytext); return COMMA;}
 [:]                                             { printf("OPERATOR COLON : %s\n", yytext); return COLON;}
@@ -45,7 +45,7 @@ Context                                         { printf("TYPE Context: %s\n", y
 [!]                                             { printf("OPERATOR LOGICAL NOT : %s\n", yytext); yylval.string = strdup(yytext); return NOT;}
 
 ">="                                            { printf("OPERATOR BIGGER OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER_OR_EQUALS;}
-"<="                                            { printf("OPERATOR LESS OR EQUALS : %s\n", yytext);yylval.string = strdup(yytext); return LESS_OR_EQUALS; }
+"<="                                            { printf("OPERATOR LESS OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return LESS_OR_EQUALS; }
 [=]                                             { printf("OPERATOR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return EQUALS;}
 [>]                                             { printf("OPERATOR BIGGER : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER;}
 [<]                                             { printf("OPERATOR LESS : %s\n", yytext); yylval.string = strdup(yytext); return LESS;}

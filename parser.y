@@ -31,12 +31,12 @@ void yyerror(char *);
 %token <frac> PI
 %token <num> TRUE
 %token <num> FALSE
-%token STRING
-%token INTEGER
-%token FLOAT
-%token DOUBLE
-%token SHAPE
-%token CONTEXT
+%token <string> STRING
+%token <string> INTEGER
+%token <string> FLOAT
+%token <string> DOUBLE
+%token <string> SHAPE
+%token <string> CONTEXT
 %token COMMA
 %token COLON
 %token OPEN_ROUND_BRACKETS
@@ -83,7 +83,7 @@ void yyerror(char *);
 %left MULT
 %left DIV
 
-%type <num> var_type
+%type <string> var_type
 %type <node> program
 %type <node> function
 %type <node> procedure
@@ -97,6 +97,7 @@ void yyerror(char *);
 %type <node> loop_operator
 %type <node> comment
 %type <node> invocation
+%type <node> enumeration
 %type <node> while_loop
 
 %type <frac> arith_literal
@@ -110,7 +111,7 @@ program: {  }
 
 function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON var_type BEGIN_KW function_body END {
     printf("End of the function %d\n", $7);
-    $$ = create_function_node($4, $9);
+    $$ = add_function_node($2, $7, $4, $9);
 };
 
 procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS BEGIN_KW body_list END {
@@ -124,11 +125,15 @@ procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_B
 };
 
 
-subprog_params: { printf("End of the subprog_params\n"); $$ = create_subprog_param_node(); }
-      | declare_variable COMMA subprog_params { printf("End of the subprog_params\n"); $$ = create_subprog_param_node(); }
-      | declare_variable { printf("End of the subprog_params\n"); $$ = create_subprog_param_node(); }
+subprog_params: { printf("End of the subprog_params\n"); $$ = create_node(NT_SUBPROG_PARAMS); }
+      | declare_variable COMMA subprog_params { printf("End of the subprog_params\n"); $$ = add_equal_node($3, $1); }
+      | declare_variable { printf("End of the subprog_params\n"); $$ = create_nodes(NT_SUBPROG_PARAMS, {$1}); }
       ;
 
+enumeration: { $$ = create_node(NT_ENUMERATION); }
+      | expression COMMA enumeration { printf("End of the enumeration\n"); $$ = add_equal_node($3, $1); }
+      | expression { printf("End of the enumeration\n"); $$ = create_nodes(NT_ENUMERATION, {$1});}
+      ;
 
 function_body: body_list RETURN expression { printf("End of the function_body\n"); $$ = create_nodes(NT_FUNCTION_BODY, {$1, $3}); }
       ;
@@ -193,16 +198,16 @@ loop_operator: while_loop { printf("End of loop\n"); }
 
 while_loop: WHILE OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); };
 
-invocation: IDENTIFIER OPEN_ROUND_BRACKETS CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); $$ = create_node(NT_INVOCATION); };
+invocation: IDENTIFIER OPEN_ROUND_BRACKETS enumeration CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); $$ = add_invocation($1, $3); };
 
 comment: ONE_STRING_COMMENT { printf("Comment ignoring\n") };
 
-var_type: STRING { $$ = STRING; }
-        | INTEGER { $$ = INTEGER; }
-        | FLOAT { $$ = FLOAT; }
-        | DOUBLE { $$ = DOUBLE; }
-        | SHAPE { $$ = SHAPE; }
-        | CONTEXT { $$ = CONTEXT; };
+var_type: STRING { $$ = $1; }
+        | INTEGER { $$ = $1; }
+        | FLOAT { $$ = $1; }
+        | DOUBLE { $$ = $1; }
+        | SHAPE { $$ = $1; }
+        | CONTEXT { $$ = $1; };
 
 
 %%

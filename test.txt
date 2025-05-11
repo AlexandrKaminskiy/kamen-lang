@@ -1,9 +1,10 @@
-function hui(var variable: Integer, var variable2: Float): Context
+function hui(): Context
 begin
+    les := 12
     while (!(i + 3 > 5))
     begin
         invoke()
         var lesha: Integer
     end
-    return 21.3 + 34 / (5 + invoke()) + test
+    return 21.3 + 34 / (5 + invoke(2+3)) + test
 end

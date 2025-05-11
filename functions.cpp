@@ -34,10 +34,58 @@ AstNode *add_seq_node(AstNode *what) {
     return node_ptr;
 }
 
-
 void print_tree() {
     cout << "Printing tree" << endl;
     cout << _print_tree(root_node_ptr->next, "", "");
+}
+
+std::string _print_declare_variable(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    std::string result = "NAME " + std::string(root->member->variable_declaration.name) + " ";
+    result += ("TYPE " + std::string(root->member->variable_declaration.type) + " ");
+    return result;
+}
+
+std::string _print_assign_variable(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    std::string result = "NAME " + std::string(root->member->variable_assignation.name) + " ";
+    result += ("VALUE " + std::to_string(root->member->variable_assignation.value.integer) + " ");
+    return result;
+}
+
+std::string _print_function(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    std::string result = "NAME " + std::string(root->member->function_declaration.name) + " ";
+    result += ("RETURN TYPE " + std::string(root->member->function_declaration.return_type) + " ");
+    result += _print_tree(root->next, "", "");
+    return result;
+}
+
+std::string _print_invocation(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    std::string result = "NAME " + std::string(root->member->invocation.identifier) + " ";
+    // result += _print_tree(root->tree, "", "");
+    return result;
+}
+
+std::string _print_enumeration(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    return _print_tree(root->next, "", "");
 }
 
 std::string _print_expression(AstNode *root) {
@@ -46,18 +94,18 @@ std::string _print_expression(AstNode *root) {
     }
 
     if (root->member->expression.expression_type == TERMINAL) {
-        return " " + std::to_string(root->member->expression.value.integer);
+        return std::to_string(root->member->expression.value.integer);
     }
 
     if (root->member->expression.expression_type == NON_TERMINAL) {
         std::string tree_part = _print_tree(root->member->expression.node, "", "");
         if (root->member->expression.op != nullptr) {
-            return " OPERATION " + std::string(root->member->expression.op) + tree_part;
+            return "OPERATION " + std::string(root->member->expression.op) + tree_part;
         }
     }
 
     if (root->member->expression.expression_type == VARIABLE) {
-        return " VARIABLE " + std::string(root->member->expression.identifier);
+        return "VARIABLE " + std::string(root->member->expression.identifier);
     }
 
     return "";
@@ -67,17 +115,18 @@ std::string _print_expression(AstNode *root) {
 std::string _print_nt(NonTerminal non_terminal, AstNode *root) {
     switch (non_terminal) {
         case NT_PROGRAM: return "NT_PROGRAM";
-        case NT_FUNCTION: return "NT_FUNCTION";
+        case NT_FUNCTION: return "NT_FUNCTION " + _print_function(root);
         case NT_PROCEDURE: return "NT_PROCEDURE";
         case NT_SUBPROG_PARAMS: return "NT_SUBPROG_PARAMS";
         case NT_FUNCTION_BODY: return "NT_FUNCTION_BODY";
         case NT_BODY_LIST: return "NT_BODY_LIST";
         case NT_BODY: return "NT_BODY";
-        case NT_ASSIGN_VARIABLE: return "NT_ASSIGN_VARIABLE";
-        case NT_DECLARE_VARIABLE: return "NT_DECLARE_VARIABLE";
-        case NT_EXPRESSION: return "NT_EXPRESSION" + _print_expression(root);
+        case NT_ASSIGN_VARIABLE: return "NT_ASSIGN_VARIABLE " + _print_assign_variable(root);
+        case NT_DECLARE_VARIABLE: return "NT_DECLARE_VARIABLE " + _print_declare_variable(root);
+        case NT_EXPRESSION: return "NT_EXPRESSION " + _print_expression(root);
         case NT_WHILE_LOOP: return "NT_WHILE_LOOP";
-        case NT_INVOCATION: return "NT_INVOCATION";
+        case NT_INVOCATION: return "NT_INVOCATION " + _print_invocation(root);
+        case NT_ENUMERATION: return "NT_ENUMERATION" + _print_enumeration(root); ;
     }
 }
 
@@ -93,12 +142,10 @@ std::string _print_tree(AstNode *root, std::string indent, std::string string) {
     return string;
 }
 
-AstNode *create_function_node(AstNode *subprog_params, AstNode *function_body) {
-    AstNode *root = create_node(NT_FUNCTION);
-    AstNode *node0 = subprog_params;
-    AstNode *node1 = function_body;
-    root->tree = node0;
-    node0->next = node1;
+AstNode *add_function_node(char* name, char* return_type, AstNode *subprog_params, AstNode *function_body) {
+    AstNode *root = create_nodes(NT_FUNCTION, {subprog_params, function_body});
+    root->member->function_declaration.name = strdup(name);
+    root->member->function_declaration.return_type = return_type;
     return root;
 }
 
@@ -113,9 +160,9 @@ AstNode *create_subprog_param_node() {
     return root;
 }
 
-AstNode *add_variable_declaration_node(const int type, const std::string name) {
+AstNode *add_variable_declaration_node(const std::string type, const std::string name) {
     AstNode *root = create_node(NT_DECLARE_VARIABLE);
-    const VariableDeclaration variable = {type, name.c_str()};
+    const VariableDeclaration variable = {type.c_str(), name.c_str()};
     root->member->variable_declaration = variable;
     cout << "adding declaration node " << name << endl;
     return root;
@@ -202,4 +249,11 @@ AstNode *add_equal_node(AstNode *main, AstNode *node) {
     }
     first->next = node;
     return main;
+}
+
+AstNode *add_invocation(char *name, AstNode *enumeration) {
+    AstNode *root = create_node(NT_INVOCATION);
+    root->tree = enumeration;
+    root->member->invocation.identifier = name;
+    return root;
 }
