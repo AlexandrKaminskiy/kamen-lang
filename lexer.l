@@ -3,6 +3,11 @@ typedef struct AstNode AstNode;
 #include "parser.tab.hpp"
 extern FILE *yyin;
 extern int yyparse(void);
+
+int msl_buf_start = 0;
+int msl_buf_position = 0;
+char msl_buffer[8192];
+
 %}
 
 %x MULTIPLE_STRING
@@ -57,13 +62,27 @@ mod                                             { printf("OPERATOR mod : %s\n", 
 [/]                                             { printf("OPERATOR DIV : %s\n", yytext); yylval.string = strdup(yytext); return DIV;}
 
 
-"'''"                                           { printf("MULTIPLE_STRING : "); BEGIN(MULTIPLE_STRING); }
-<MULTIPLE_STRING>.                              { printf("%s", yytext); }
-<MULTIPLE_STRING>"'''"                          { BEGIN(INITIAL); }
+"'''"                                           { BEGIN(MULTIPLE_STRING); }
+<MULTIPLE_STRING>.                              {
+    msl_buffer[msl_buf_position++] = yytext[0];
+}
+
+<MULTIPLE_STRING>"'''"                          {
+    char* msl = (char*) malloc(sizeof(char) * (msl_buf_position - msl_buf_start + 1));
+    for (int i = 0; i < msl_buf_position - msl_buf_start; i++) {
+        msl[i] = msl_buffer[i + msl_buf_start];
+    }
+    msl[msl_buf_position - msl_buf_start] = '\0';
+    msl_buf_start = msl_buf_position;
+    yylval.string = msl;
+    printf("MULTIPLE_STRING %s", msl);
+    BEGIN(INITIAL);
+    return STRING_LITERAL;
+}
 
 ["][^"]*["]                                     { printf("STRING LITERAL: %s\n", yytext); return STRING_LITERAL;}
 [0-9]+                                          { printf("INTEGER NUMBER: %s\n", yytext); yylval.num = atoi(yytext); return INTEGER_NUMBER;}
-[0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); yylval.frac = atoi(yytext); return DOUBLE_NUMBER;}
+[0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); yylval.frac = atof(yytext); return DOUBLE_NUMBER;}
 [a-zA-Z_][a-zA-Z_0-9]*                          { printf("IDENTIFIER: %s\n", yytext); yylval.string = strdup(yytext); return IDENTIFIER;}
 
 [ \t\n\v\f\r]                                   {  }

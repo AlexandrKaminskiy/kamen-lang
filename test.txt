@@ -1,5 +1,8 @@
 function hui(): Context
 begin
+    '''I am happy'''
+    '''Very
+    sad '''
     les := 12
     while (!(i + 3 > 5))
     begin

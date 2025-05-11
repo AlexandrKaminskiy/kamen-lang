@@ -55,7 +55,6 @@ std::string _print_assign_variable(AstNode *root) {
     }
 
     std::string result = "NAME " + std::string(root->member->variable_assignation.name) + " ";
-    result += ("VALUE " + std::to_string(root->member->variable_assignation.value.integer) + " ");
     return result;
 }
 
@@ -94,7 +93,17 @@ std::string _print_expression(AstNode *root) {
     }
 
     if (root->member->expression.expression_type == TERMINAL) {
-        return std::to_string(root->member->expression.value.integer);
+        if (std::string(root->member->expression.type) == "Integer") {
+            return "Integer " + std::to_string(root->member->expression.value.integer);
+        }
+
+        if (std::string(root->member->expression.type) == "Double") {
+            return "Double " + std::to_string(root->member->expression.value.floating);
+        }
+
+        if (std::string(root->member->expression.type) == "String") {
+            return "String " + std::string(root->member->expression.value.string);
+        }
     }
 
     if (root->member->expression.expression_type == NON_TERMINAL) {
@@ -168,10 +177,11 @@ AstNode *add_variable_declaration_node(const std::string type, const std::string
     return root;
 }
 
-AstNode *add_variable_assignation_node(const std::string name, const Value value) {
+AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
     AstNode *root = create_node(NT_ASSIGN_VARIABLE);
-    const VariableAssignation variable = {name.c_str(), value};
+    const VariableAssignation variable = {name.c_str()};
     root->member->variable_assignation = variable;
+    root->tree = value;
     cout << "adding assignation node " << name << endl;
     return root;
 }
@@ -179,6 +189,23 @@ AstNode *add_variable_assignation_node(const std::string name, const Value value
 AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.integer = value;
+    root->member->expression.type = "Integer";
+    root->member->expression.expression_type = TERMINAL;
+    return root;
+}
+
+AstNode *add_expression_node(const float value) {
+    auto root = create_node(NT_EXPRESSION);
+    root->member->expression.value.floating = value;
+    root->member->expression.type = "Double";
+    root->member->expression.expression_type = TERMINAL;
+    return root;
+}
+
+AstNode *add_expression_node(char* value, int stub) {
+    auto root = create_node(NT_EXPRESSION);
+    root->member->expression.value.string = value;
+    root->member->expression.type = "String";
     root->member->expression.expression_type = TERMINAL;
     return root;
 }

@@ -100,8 +100,6 @@ void yyerror(char *);
 %type <node> enumeration
 %type <node> while_loop
 
-%type <frac> arith_literal
-
 %%
 
 program: {  }
@@ -160,9 +158,7 @@ describe_variable: VAR describe_variable ASSIGN expression {
 
 
 assign_variable: IDENTIFIER ASSIGN expression {
-    Value value;
-    value.integer = 10;
-    $$ = add_variable_assignation_node($1, value);
+    $$ = add_variable_assignation_node($1, $3);
 };
 
 
@@ -183,14 +179,12 @@ expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | expression AND expression { $$ = add_expression_node($1, $3, $2) }
     | NOT expression { $$ = add_expression_node($2, $1) }
     | expression OR expression { $$ = add_expression_node($1, $3, $2) }
-    | arith_literal { $$ = add_expression_node($1); }
+    | INTEGER_NUMBER { $$ = add_expression_node($1); }
+    | DOUBLE_NUMBER { $$ = add_expression_node($1); }
+    | STRING_LITERAL { $$ = add_expression_node($1, 0); }
     | invocation { $$ = create_nodes(NT_EXPRESSION, {$1}); }
     | OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS { $$ = add_expression_node($2); }
     | IDENTIFIER { $$ = add_expression_node($1); }
-    ;
-
-arith_literal: INTEGER_NUMBER { $$ = $1; }
-    | DOUBLE_NUMBER { $$ = (int) $1; }
     ;
 
 loop_operator: while_loop { printf("End of loop\n"); }

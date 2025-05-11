@@ -51,7 +51,6 @@ typedef struct {
 
 typedef struct {
     const char *name;
-    Value value;
 } VariableAssignation;
 
 typedef struct {
@@ -78,6 +77,7 @@ typedef struct {
     ExpressionType expression_type;
     AstNode *node;
     char *op;
+    const char *type;
     Value value;
     char *identifier;
 } Expression;
@@ -105,7 +105,7 @@ AstNode *add_seq_node(AstNode *what);
 
 AstNode *add_variable_declaration_node(std::string type, std::string name);
 
-AstNode *add_variable_assignation_node(std::string name, Value value);
+AstNode *add_variable_assignation_node(std::string name, AstNode *value);
 
 void print_tree();
 
@@ -126,6 +126,10 @@ AstNode *add_equal_node(AstNode *main, AstNode *node);
 AstNode *add_expression_node();
 
 AstNode *add_expression_node(int value);
+
+AstNode *add_expression_node(float value);
+
+AstNode *add_expression_node(char* value, int stub); //todo fix
 
 AstNode *add_expression_node(const char *identifier);
 
