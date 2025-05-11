@@ -17,7 +17,6 @@ typedef enum {
     NT_DECLARE_VARIABLE,
     NT_EXPRESSION,
     NT_WHILE_LOOP,
-    NT_CONDITION_EXPRESSION,
     NT_INVOCATION,
 } NonTerminal;
 
@@ -25,7 +24,8 @@ typedef enum {
     TERMINAL = 1,
     NON_TERMINAL,
     OPERATOR,
-    INVOCATION
+    INVOCATION,
+    VARIABLE,
 } ExpressionType;
 
 typedef struct {
@@ -67,12 +67,12 @@ struct AstNode {
     Member *member;
 };
 
-
-typedef union {
+typedef struct {
     ExpressionType expression_type;
     AstNode *node;
     char *op;
     Value value;
+    char* identifier;
 } Expression;
 
 union Member {
@@ -96,14 +96,13 @@ AstNode *add_variable_assignation_node(std::string name, Value value);
 
 void print_tree();
 
-void _print_tree(AstNode *root, std::string str);
+std::string _print_tree(AstNode *root, std::string indent, std::string string);
 
 AstNode *create_function_node(AstNode *subprog_params, AstNode *function_body);
 
 AstNode *create_subprog_param_node();
 
 AstNode *add_body_node(AstNode *body);
-
 
 AstNode *create_function_body_node();
 
@@ -113,10 +112,12 @@ AstNode *add_equal_node(AstNode *main, AstNode *node);
 
 AstNode *add_expression_node();
 
-AstNode *add_expression_node(float value);
+AstNode *add_expression_node(int value);
 
-AstNode *add_expression_node(char *op);
+AstNode *add_expression_node(const char *identifier);
 
 AstNode *add_expression_node(AstNode *node);
+
+AstNode *add_expression_node(AstNode *node, char *op);
 
 AstNode *add_expression_node(AstNode *left, AstNode *right, char *op);

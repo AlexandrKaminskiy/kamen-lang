@@ -44,27 +44,38 @@ void yyerror(char *);
 %token OPEN_SQUARE_BRACKETS
 %token CLOSE_SQUARE_BRACKETS
 %token ASSIGN
-%token BIGGER_OR_EQUALS
-%token LESS_OR_EQUALS
-%token EQUALS
 
-
-%token BIGGER
-%token LESS
 %token <string> STRING_LITERAL
 %token <num> INTEGER_NUMBER
 %token <frac> DOUBLE_NUMBER
 %token <string> IDENTIFIER
 
-%token NOT
-%token AND
-%token OR
+%token <string> NOT
+%token <string> AND
+%token <string> OR
+
+
+%token <string> EQUALS
+%token <string> BIGGER_OR_EQUALS
+%token <string> LESS_OR_EQUALS
+%token <string> BIGGER
+%token <string> LESS
 
 %token <string> PLUS
 %token <string> MINUS
 %token <string> MOD
 %token <string> MULT
 %token <string> DIV
+
+%left OR
+%left AND
+%left NOT
+
+%left EQUALS
+%left BIGGER_OR_EQUALS
+%left LESS_OR_EQUALS
+%left BIGGER
+%left LESS
 
 %left PLUS
 %left MINUS
@@ -83,7 +94,6 @@ void yyerror(char *);
 %type <node> expression
 %type <node> body
 %type <node> assign_variable
-%type <node> condition_expression
 %type <node> loop_operator
 %type <node> comment
 %type <node> invocation
@@ -129,7 +139,6 @@ body_list: { printf("1 End of the body_list"); $$ = create_node(NT_BODY_LIST); }
 
 body: declare_variable { $$ = create_nodes(NT_BODY, {$1}); }
       | assign_variable { $$ = create_nodes(NT_BODY, {$1}); }
-      | condition_expression
       | expression
       | loop_operator { $$ = create_nodes(NT_BODY, {$1}); }
       | comment { $$ = nullptr; }
@@ -160,25 +169,31 @@ expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | expression MINUS expression { $$ = add_expression_node($1, $3, $2) }
     | expression MULT expression { $$ = add_expression_node($1, $3, $2) }
     | expression DIV expression { $$ = add_expression_node($1, $3, $2) }
+    | expression MOD expression { $$ = add_expression_node($1, $3, $2) }
+    | expression EQUALS expression { $$ = add_expression_node($1, $3, $2) }
+    | expression BIGGER_OR_EQUALS expression { $$ = add_expression_node($1, $3, $2) }
+    | expression LESS_OR_EQUALS expression { $$ = add_expression_node($1, $3, $2) }
+    | expression BIGGER expression { $$ = add_expression_node($1, $3, $2) }
+    | expression LESS expression { $$ = add_expression_node($1, $3, $2) }
+    | expression AND expression { $$ = add_expression_node($1, $3, $2) }
+    | NOT expression { $$ = add_expression_node($2, $1) }
+    | expression OR expression { $$ = add_expression_node($1, $3, $2) }
     | arith_literal { $$ = add_expression_node($1); }
     | invocation { $$ = create_nodes(NT_EXPRESSION, {$1}); }
     | OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS { $$ = add_expression_node($2); }
-    | IDENTIFIER
+    | IDENTIFIER { $$ = add_expression_node($1); }
     ;
 
-
-arith_literal: INTEGER_NUMBER { $$ = (float) $1; }
-    | DOUBLE_NUMBER { $$ = $1; }
+arith_literal: INTEGER_NUMBER { $$ = $1; }
+    | DOUBLE_NUMBER { $$ = (int) $1; }
     ;
 
 loop_operator: while_loop { printf("End of loop\n"); }
       ;
 
-while_loop: WHILE OPEN_ROUND_BRACKETS condition_expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); };
+while_loop: WHILE OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); };
 
 invocation: IDENTIFIER OPEN_ROUND_BRACKETS CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); $$ = create_node(NT_INVOCATION); };
-
-condition_expression: { $$ = create_node(NT_CONDITION_EXPRESSION); };
 
 comment: ONE_STRING_COMMENT { printf("Comment ignoring\n") };
 

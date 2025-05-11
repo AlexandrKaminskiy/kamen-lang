@@ -37,7 +37,7 @@ AstNode *add_seq_node(AstNode *what) {
 
 void print_tree() {
     cout << "Printing tree" << endl;
-    _print_tree(root_node_ptr->next, "");
+    cout << _print_tree(root_node_ptr->next, "", "");
 }
 
 std::string _print_expression(AstNode *root) {
@@ -46,13 +46,20 @@ std::string _print_expression(AstNode *root) {
     }
 
     if (root->member->expression.expression_type == TERMINAL) {
-        std::cout << root->member->expression.value.integer;
-        return "";
+        return " " + std::to_string(root->member->expression.value.integer);
     }
 
     if (root->member->expression.expression_type == NON_TERMINAL) {
-        _print_tree(root->member->expression.node, "");
+        std::string tree_part = _print_tree(root->member->expression.node, "", "");
+        if (root->member->expression.op != nullptr) {
+            return " OPERATION " + std::string(root->member->expression.op) + tree_part;
+        }
     }
+
+    if (root->member->expression.expression_type == VARIABLE) {
+        return " VARIABLE " + std::string(root->member->expression.identifier);
+    }
+
     return "";
 }
 
@@ -68,22 +75,22 @@ std::string _print_nt(NonTerminal non_terminal, AstNode *root) {
         case NT_BODY: return "NT_BODY";
         case NT_ASSIGN_VARIABLE: return "NT_ASSIGN_VARIABLE";
         case NT_DECLARE_VARIABLE: return "NT_DECLARE_VARIABLE";
-        case NT_EXPRESSION: _print_expression(root); return "NT_EXPRESSION";
+        case NT_EXPRESSION: return "NT_EXPRESSION" + _print_expression(root);
         case NT_WHILE_LOOP: return "NT_WHILE_LOOP";
-        case NT_CONDITION_EXPRESSION: return "NT_CONDITION_EXPRESSION";
         case NT_INVOCATION: return "NT_INVOCATION";
     }
 }
 
-void _print_tree(AstNode *root, std::string indent) {
+std::string _print_tree(AstNode *root, std::string indent, std::string string) {
     AstNode *node = root;
     while (node != nullptr) {
-        std::cout << indent << _print_nt(node->non_terminal, node) << std::endl;
+        string += indent + _print_nt(node->non_terminal, node) + "\n";
         if (node->tree != nullptr) {
-            _print_tree(node->tree, indent + std::string(4, ' '));
+            string += _print_tree(node->tree, indent + std::string(4, ' '), "");
         }
         node = node->next;
     }
+    return string;
 }
 
 AstNode *create_function_node(AstNode *subprog_params, AstNode *function_body) {
@@ -122,17 +129,17 @@ AstNode *add_variable_assignation_node(const std::string name, const Value value
     return root;
 }
 
-AstNode *add_expression_node(float value) {
+AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
-    root->member->expression.value.floating = value;
+    root->member->expression.value.integer = value;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
 
-AstNode *add_expression_node(char* op) {
+AstNode *add_expression_node(const char* identifier) {
     auto root = create_node(NT_EXPRESSION);
-    root->member->expression.op = strdup(op);
-    root->member->expression.expression_type = OPERATOR;
+    root->member->expression.identifier = strdup(identifier);
+    root->member->expression.expression_type = VARIABLE;
     return root;
 }
 
@@ -140,6 +147,15 @@ AstNode *add_expression_node(AstNode* node) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.expression_type = NON_TERMINAL;
     root->tree = node;
+    return root;
+}
+
+AstNode *add_expression_node(AstNode *node, char *op) {
+    auto root = create_node(NT_EXPRESSION);
+    root->tree = node;
+    root->member->expression.op = strdup(op);
+    root->member->expression.expression_type = NON_TERMINAL;
+
     return root;
 }
 

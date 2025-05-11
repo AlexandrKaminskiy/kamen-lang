@@ -38,20 +38,23 @@ Context                                         { printf("TYPE Context: %s\n", y
 [)]                                             { printf("CLOSE ROUND BRACKETS : %s\n", yytext); return CLOSE_ROUND_BRACKETS;}
 [[]                                             { printf("OPEN SQUARE BRACKETS : %s\n", yytext); return OPEN_SQUARE_BRACKETS;}
 []]                                             { printf("CLOSE SQUARE BRACKETS : %s\n", yytext); return CLOSE_SQUARE_BRACKETS;}
-[&][&]                                          { printf("OPERATOR LOGICAL AND : %s\n", yytext); return AND;}
-[|][|]                                          { printf("OPERATOR LOGICAL OR : %s\n", yytext); return OR;}
-[!]                                             { printf("OPERATOR LOGICAL NOT : %s\n", yytext); return NOT;}
-mod                                             { printf("OPERATOR mod : %s\n", yytext); return MOD;}
 [:][=]                                          { printf("OPERATOR ASSIGN : %s\n", yytext); return ASSIGN;}
-[*]                                             { printf("OPERATOR MULT : %s\n", yytext); return MULT;}
-">="                                            { printf("OPERATOR BIGGER OR EQUALS : %s\n", yytext); return BIGGER_OR_EQUALS;}
-"<="                                            { printf("OPERATOR LESS OR EQUALS : %s\n", yytext); return LESS_OR_EQUALS; }
-[=]                                             { printf("OPERATOR EQUALS : %s\n", yytext); return EQUALS;}
-[-]                                             { printf("OPERATOR MINUS : %s\n", yytext); return MINUS;}
-[/]                                             { printf("OPERATOR DIV : %s\n", yytext); return DIV;}
-[+]                                             { printf("OPERATOR PLUS : %s\n", yytext); return PLUS;}
-[>]                                             { printf("OPERATOR BIGGER : %s\n", yytext); return BIGGER;}
-[<]                                             { printf("OPERATOR LESS : %s\n", yytext); return LESS;}
+
+[&][&]                                          { printf("OPERATOR LOGICAL AND : %s\n", yytext); yylval.string = strdup(yytext); return AND;}
+[|][|]                                          { printf("OPERATOR LOGICAL OR : %s\n", yytext); yylval.string = strdup(yytext); return OR;}
+[!]                                             { printf("OPERATOR LOGICAL NOT : %s\n", yytext); yylval.string = strdup(yytext); return NOT;}
+
+">="                                            { printf("OPERATOR BIGGER OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER_OR_EQUALS;}
+"<="                                            { printf("OPERATOR LESS OR EQUALS : %s\n", yytext);yylval.string = strdup(yytext); return LESS_OR_EQUALS; }
+[=]                                             { printf("OPERATOR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return EQUALS;}
+[>]                                             { printf("OPERATOR BIGGER : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER;}
+[<]                                             { printf("OPERATOR LESS : %s\n", yytext); yylval.string = strdup(yytext); return LESS;}
+
+[+]                                             { printf("OPERATOR PLUS : %s\n", yytext); yylval.string = strdup(yytext); return PLUS;}
+[-]                                             { printf("OPERATOR MINUS : %s\n", yytext); yylval.string = strdup(yytext); return MINUS;}
+mod                                             { printf("OPERATOR mod : %s\n", yytext); yylval.string = strdup(yytext); return MOD;}
+[*]                                             { printf("OPERATOR MULT : %s\n", yytext); yylval.string = strdup(yytext); return MULT;}
+[/]                                             { printf("OPERATOR DIV : %s\n", yytext); yylval.string = strdup(yytext); return DIV;}
 
 
 "'''"                                           { printf("MULTIPLE_STRING : "); BEGIN(MULTIPLE_STRING); }
@@ -59,8 +62,8 @@ mod                                             { printf("OPERATOR mod : %s\n", 
 <MULTIPLE_STRING>"'''"                          { BEGIN(INITIAL); }
 
 ["][^"]*["]                                     { printf("STRING LITERAL: %s\n", yytext); return STRING_LITERAL;}
-[0-9]+                                          { printf("INTEGER NUMBER: %s\n", yytext); return INTEGER_NUMBER;}
-[0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); return DOUBLE_NUMBER;}
+[0-9]+                                          { printf("INTEGER NUMBER: %s\n", yytext); yylval.num = atoi(yytext); return INTEGER_NUMBER;}
+[0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); yylval.frac = atoi(yytext); return DOUBLE_NUMBER;}
 [a-zA-Z_][a-zA-Z_0-9]*                          { printf("IDENTIFIER: %s\n", yytext); yylval.string = strdup(yytext); return IDENTIFIER;}
 
 [ \t\n\v\f\r]                                   {  }

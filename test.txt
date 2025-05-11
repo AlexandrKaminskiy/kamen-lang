@@ -1,9 +1,9 @@
 function hui(var variable: Integer, var variable2: Float): Context
 begin
-    while ()
+    while (!(i + 3 > 5))
     begin
-        #invoke()
+        invoke()
         var lesha: Integer
     end
-    return 20
+    return 21.3 + 34 / (5 + invoke()) + test
 end
