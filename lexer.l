@@ -18,12 +18,20 @@ begin                                           { printf("KEYWORD begin: %s\n", 
 end                                             { printf("KEYWORD end: %s\n", yytext); return END;}
 if                                              { printf("KEYWORD if: %s\n", yytext); return IF;}
 else                                            { printf("KEYWORD else: %s\n", yytext); return ELSE;}
+in                                              { printf("KEYWORD in: %s\n", yytext); return IN;}
+to                                              { printf("KEYWORD in: %s\n", yytext); return TO;}
 for                                             { printf("KEYWORD for: %s\n", yytext); return FOR;}
 while                                           { printf("KEYWORD while: %s\n", yytext); return WHILE;}
 function                                        { printf("KEYWORD function: %s\n", yytext); return FUNCTION;}
 procedure                                       { printf("KEYWORD procedure: %s\n", yytext); return PROCEDURE;}
 var                                             { printf("KEYWORD var: %s\n", yytext); return VAR;}
 return                                          { printf("KEYWORD return: %s\n", yytext); return RETURN;}
+
+Rect                                            { printf("KEYWORD Rect: %s\n", yytext); return RECT;}
+Oval                                            { printf("KEYWORD Oval: %s\n", yytext); return OVAL;}
+Line                                            { printf("KEYWORD Line: %s\n", yytext); return LINE;}
+Polyline                                        { printf("KEYWORD Polyline: %s\n", yytext); return POLYLINE;}
+Text                                            { printf("KEYWORD Text: %s\n", yytext); return TEXT;}
 
 E                                               { printf("CONSTANT E: %s\n", yytext); return E;}
 PI                                              { printf("CONSTANT PI: %s\n", yytext); return PI;}
@@ -32,7 +40,6 @@ false                                           { printf("CONSTANT false: %s\n",
 
 String                                          { printf("TYPE String: %s\n", yytext); yylval.string = strdup(yytext); return STRING;}
 Integer                                         { printf("TYPE Integer: %s\n", yytext); yylval.string = strdup(yytext); return INTEGER;}
-Float                                           { printf("TYPE Float: %s\n", yytext); yylval.string = strdup(yytext); return FLOAT;}
 Double                                          { printf("TYPE Double: %s\n", yytext); yylval.string = strdup(yytext); return DOUBLE;}
 Shape                                           { printf("TYPE Shape: %s\n", yytext); yylval.string = strdup(yytext); return SHAPE;}
 Context                                         { printf("TYPE Context: %s\n", yytext); yylval.string = strdup(yytext); return CONTEXT;}

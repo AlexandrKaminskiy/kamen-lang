@@ -7,6 +7,25 @@ using namespace std;
 typedef struct AstNode AstNode;
 typedef union Member member;
 
+/*
+ * User type - can use anywhere
+ */
+typedef enum {
+    U_TYPE_INCORRECT = 0,
+    TYPE_INTEGER,
+    TYPE_STRING,
+    TYPE_DOUBLE,
+    TYPE_BOOLEAN,
+} UserType;
+
+/*
+ * System type - can use only in embedded function invocation or declaration (and assignation)
+ */
+typedef enum {
+    S_TYPE_INCORRECT = 5,
+    TYPE_SHAPE,
+    TYPE_CONTEXT,
+} SystemType;
 
 typedef enum {
     NT_PROGRAM = 1,
@@ -20,8 +39,10 @@ typedef enum {
     NT_DECLARE_VARIABLE,
     NT_EXPRESSION,
     NT_WHILE_LOOP,
+    NT_FOR_LOOP,
     NT_INVOCATION,
     NT_ENUMERATION,
+    NT_CREATE_LINE,
 } NonTerminal;
 
 typedef enum {
@@ -32,11 +53,11 @@ typedef enum {
     VARIABLE,
 } ExpressionType;
 
-typedef struct {
-    const char *name;
-    const char *type;
-    int scope_level;
-} Identifiers;
+// typedef struct {
+//     const char *name;
+//     const char *type;
+//     int scope_level;
+// } Identifiers;
 
 typedef union {
     int integer;
@@ -51,13 +72,21 @@ typedef struct {
 
 typedef struct {
     const char *name;
+} CreateLine;
+
+typedef struct {
+    const char *name;
 } VariableAssignation;
 
 typedef struct {
     AstNode *variable_declarations;
-    const char *return_type;
+    UserType return_type;
     const char *name;
 } FunctionDeclaration;
+
+typedef struct {
+    const char *name;
+} ForLoop;
 
 // typedef struct {
 //     int type;
@@ -77,7 +106,7 @@ typedef struct {
     ExpressionType expression_type;
     AstNode *node;
     char *op;
-    const char *type;
+    UserType type;
     Value value;
     char *identifier;
 } Expression;
@@ -92,6 +121,8 @@ union Member {
     Expression expression;
     FunctionDeclaration function_declaration;
     Invocation invocation;
+    ForLoop for_loop;
+    CreateLine create_line;
 };
 
 inline AstNode root_node = AstNode();
@@ -100,6 +131,14 @@ inline AstNode *root_node_ptr = &root_node;
 AstNode *create_node(NonTerminal non_terminal);
 
 void mylog(std::string string);
+
+UserType to_user_type(std::string string);
+
+std::string to_user_type(UserType user_type);
+
+SystemType to_system_type(std::string string);
+
+std::string to_system_type(SystemType system_type);
 
 AstNode *add_seq_node(AstNode *what);
 
@@ -111,7 +150,7 @@ void print_tree();
 
 std::string _print_tree(AstNode *root, std::string indent, std::string string);
 
-AstNode *add_function_node(char *name, char *return_type, AstNode *subprog_params, AstNode *function_body);
+AstNode *add_function_node(char *name, UserType return_type, AstNode *subprog_params, AstNode *function_body);
 
 AstNode *create_subprog_param_node();
 
@@ -140,3 +179,7 @@ AstNode *add_expression_node(AstNode *node, char *op);
 AstNode *add_expression_node(AstNode *left, AstNode *right, char *op);
 
 AstNode *add_invocation(char *name, AstNode *enumeration);
+
+AstNode *add_for_loop(char *loop_var, AstNode *from, AstNode *to, AstNode *body);
+
+AstNode *add_create_line_node(char *name, AstNode *first, AstNode *second);

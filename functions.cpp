@@ -4,19 +4,63 @@
 #include <vector>
 using namespace std;
 
-std::vector<Identifiers> identifiers;
 
 
 void mylog(std::string string) {
-    Identifiers identifier = Identifiers();
-    identifier.name = string.c_str();
-    identifier.scope_level = 1;
-    identifier.type = "function";
-
-    identifiers.push_back(identifier);
-    std::cout << string << std::endl;
+    // Identifiers identifier = Identifiers();
+    // identifier.name = string.c_str();
+    // identifier.scope_level = 1;
+    // identifier.type = "function";
+    //
+    // identifiers.push_back(identifier);
+    // std::cout << string << std::endl;
 }
 
+std::string to_user_type(UserType user_type) {
+    switch (user_type) {
+        case TYPE_DOUBLE: return "Double";
+        case TYPE_INTEGER: return "Integer";
+        case TYPE_BOOLEAN: return "Boolean";
+        case TYPE_STRING: return "String";
+        default: return "U_Incorrect";
+    }
+}
+
+UserType to_user_type(std::string string) {
+    if (string == "Integer") {
+        return TYPE_INTEGER;
+    }
+    if (string == "String") {
+        return TYPE_STRING;
+    }
+    if (string == "Double") {
+        return TYPE_DOUBLE;
+    }
+    if (string == "Boolean") {
+        return TYPE_BOOLEAN;
+    }
+    return U_TYPE_INCORRECT;
+}
+
+
+std::string to_system_type(SystemType system_type) {
+    switch (system_type) {
+        case TYPE_SHAPE: return "Shape";
+        case TYPE_CONTEXT: return "Context";
+        default: return "SYS_Incorrect";
+    }
+}
+
+SystemType to_system_type(std::string string) {
+    if (string == "Shape") {
+        return TYPE_SHAPE;
+    }
+    if (string == "Context") {
+        return TYPE_CONTEXT;
+    }
+
+    return S_TYPE_INCORRECT;
+}
 
 AstNode *create_node(const NonTerminal non_terminal) {
     auto *node_ptr = new AstNode();
@@ -64,7 +108,7 @@ std::string _print_function(AstNode *root) {
     }
 
     std::string result = "NAME " + std::string(root->member->function_declaration.name) + " ";
-    result += ("RETURN TYPE " + std::string(root->member->function_declaration.return_type) + " ");
+    result += ("RETURN TYPE " + to_user_type(root->member->function_declaration.return_type) + " ");
     result += _print_tree(root->next, "", "");
     return result;
 }
@@ -75,7 +119,15 @@ std::string _print_invocation(AstNode *root) {
     }
 
     std::string result = "NAME " + std::string(root->member->invocation.identifier) + " ";
-    // result += _print_tree(root->tree, "", "");
+    return result;
+}
+
+std::string _print_for_loop(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    std::string result = "LOOP VARIABLE " + std::string(root->member->for_loop.name) + " ";
     return result;
 }
 
@@ -87,22 +139,31 @@ std::string _print_enumeration(AstNode *root) {
     return _print_tree(root->next, "", "");
 }
 
+std::string _print_create_line(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    return "CREATE LINE INVOCATION, VARIABLE " + std::string(root->member->create_line.name) + " ";
+
+}
+
 std::string _print_expression(AstNode *root) {
     if (root == nullptr) {
         return "";
     }
 
     if (root->member->expression.expression_type == TERMINAL) {
-        if (std::string(root->member->expression.type) == "Integer") {
-            return "Integer " + std::to_string(root->member->expression.value.integer);
+        if (root->member->expression.type == TYPE_INTEGER) {
+            return to_user_type(root->member->expression.type) + " " + std::to_string(root->member->expression.value.integer);
         }
 
-        if (std::string(root->member->expression.type) == "Double") {
-            return "Double " + std::to_string(root->member->expression.value.floating);
+        if (root->member->expression.type == TYPE_DOUBLE) {
+            return to_user_type(root->member->expression.type) + " " + std::to_string(root->member->expression.value.floating);
         }
 
-        if (std::string(root->member->expression.type) == "String") {
-            return "String " + std::string(root->member->expression.value.string);
+        if (root->member->expression.type == TYPE_STRING) {
+            return to_user_type(root->member->expression.type) + " " + std::string(root->member->expression.value.string);
         }
     }
 
@@ -127,6 +188,7 @@ std::string _print_nt(NonTerminal non_terminal, AstNode *root) {
         case NT_FUNCTION: return "NT_FUNCTION " + _print_function(root);
         case NT_PROCEDURE: return "NT_PROCEDURE";
         case NT_SUBPROG_PARAMS: return "NT_SUBPROG_PARAMS";
+        case NT_FOR_LOOP: return "NT_FOR_LOOP " + _print_for_loop(root);
         case NT_FUNCTION_BODY: return "NT_FUNCTION_BODY";
         case NT_BODY_LIST: return "NT_BODY_LIST";
         case NT_BODY: return "NT_BODY";
@@ -136,6 +198,7 @@ std::string _print_nt(NonTerminal non_terminal, AstNode *root) {
         case NT_WHILE_LOOP: return "NT_WHILE_LOOP";
         case NT_INVOCATION: return "NT_INVOCATION " + _print_invocation(root);
         case NT_ENUMERATION: return "NT_ENUMERATION" + _print_enumeration(root); ;
+        case NT_CREATE_LINE: return "NT_CREATE_LINE " + _print_create_line(root); ;
     }
 }
 
@@ -151,7 +214,7 @@ std::string _print_tree(AstNode *root, std::string indent, std::string string) {
     return string;
 }
 
-AstNode *add_function_node(char* name, char* return_type, AstNode *subprog_params, AstNode *function_body) {
+AstNode *add_function_node(char* name, UserType return_type, AstNode *subprog_params, AstNode *function_body) {
     AstNode *root = create_nodes(NT_FUNCTION, {subprog_params, function_body});
     root->member->function_declaration.name = strdup(name);
     root->member->function_declaration.return_type = return_type;
@@ -189,7 +252,7 @@ AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
 AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.integer = value;
-    root->member->expression.type = "Integer";
+    root->member->expression.type = TYPE_INTEGER;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
@@ -197,7 +260,7 @@ AstNode *add_expression_node(const int value) {
 AstNode *add_expression_node(const float value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.floating = value;
-    root->member->expression.type = "Double";
+    root->member->expression.type = TYPE_DOUBLE;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
@@ -205,7 +268,7 @@ AstNode *add_expression_node(const float value) {
 AstNode *add_expression_node(char* value, int stub) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.string = value;
-    root->member->expression.type = "String";
+    root->member->expression.type = TYPE_STRING;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
@@ -282,5 +345,17 @@ AstNode *add_invocation(char *name, AstNode *enumeration) {
     AstNode *root = create_node(NT_INVOCATION);
     root->tree = enumeration;
     root->member->invocation.identifier = name;
+    return root;
+}
+
+AstNode *add_for_loop(char *loop_var, AstNode *from, AstNode *to, AstNode *body) {
+    AstNode *root = create_nodes(NT_FOR_LOOP, {from, to, body});
+    root->member->for_loop.name = strdup(loop_var);
+    return root;
+}
+
+AstNode *add_create_line_node(char *name, AstNode *first, AstNode *second) {
+    AstNode *root = create_nodes(NT_CREATE_LINE, {first, second});
+    root->member->create_line.name = strdup(name);
     return root;
 }

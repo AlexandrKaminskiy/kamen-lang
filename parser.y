@@ -20,6 +20,8 @@ void yyerror(char *);
 %token BEGIN_KW
 %token END
 %token IF
+%token IN
+%token TO
 %token ELSE
 %token FOR
 %token WHILE
@@ -54,6 +56,11 @@ void yyerror(char *);
 %token <string> AND
 %token <string> OR
 
+%token <node> RECT
+%token <node> OVAL
+%token <node> LINE
+%token <node> POLYLINE
+%token <node> TEXT
 
 %token <string> EQUALS
 %token <string> BIGGER_OR_EQUALS
@@ -83,7 +90,8 @@ void yyerror(char *);
 %left MULT
 %left DIV
 
-%type <string> var_type
+%type <num> user_var_type
+%type <num> system_var_type
 %type <node> program
 %type <node> function
 %type <node> procedure
@@ -94,11 +102,13 @@ void yyerror(char *);
 %type <node> expression
 %type <node> body
 %type <node> assign_variable
-%type <node> loop_operator
 %type <node> comment
 %type <node> invocation
 %type <node> enumeration
 %type <node> while_loop
+%type <node> for_loop
+
+%type <node> create_line_node
 
 %%
 
@@ -107,9 +117,9 @@ program: {  }
       | procedure program {  root_node_ptr = add_seq_node($1); print_tree(); printf("End of the program"); }
       ;
 
-function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON var_type BEGIN_KW function_body END {
+function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON user_var_type BEGIN_KW function_body END {
     printf("End of the function %d\n", $7);
-    $$ = add_function_node($2, $7, $4, $9);
+    $$ = add_function_node($2, (UserType) $7, $4, $9);
 };
 
 procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS BEGIN_KW body_list END {
@@ -142,29 +152,21 @@ body_list: { printf("1 End of the body_list"); $$ = create_node(NT_BODY_LIST); }
 
 body: declare_variable { $$ = create_nodes(NT_BODY, {$1}); }
       | assign_variable { $$ = create_nodes(NT_BODY, {$1}); }
-      | expression
-      | loop_operator { $$ = create_nodes(NT_BODY, {$1}); }
+      | expression { $$ = create_nodes(NT_BODY, {$1}); }
+      | while_loop { $$ = create_nodes(NT_BODY, {$1}); }
+      | for_loop { $$ = create_nodes(NT_BODY, {$1}); }
       | comment { $$ = nullptr; }
       | invocation { $$ = create_nodes(NT_BODY, {$1}); }
       ;
 
-describe_variable: VAR describe_variable ASSIGN expression {
-    printf("End of the describe_variable\n");
-
-    Value value;
-    value.string = "value";
-    //add_variable_declaration_node($3, $1, value);
-};
+assign_variable: IDENTIFIER ASSIGN expression { $$ = add_variable_assignation_node($1, $3); }
+    | IDENTIFIER ASSIGN create_line_node { $$ = add_variable_assignation_node($1, $3); }
+    ;
 
 
-assign_variable: IDENTIFIER ASSIGN expression {
-    $$ = add_variable_assignation_node($1, $3);
-};
-
-
-declare_variable: VAR IDENTIFIER COLON var_type {
-    $$ = add_variable_declaration_node($4, $2);
-};
+declare_variable: VAR IDENTIFIER COLON user_var_type { $$ = add_variable_declaration_node(to_user_type((UserType) $4), $2); }
+    | VAR IDENTIFIER COLON system_var_type { $$ = add_variable_declaration_node(to_system_type((SystemType) $4), $2); }
+    ;
 
 expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | expression MINUS expression { $$ = add_expression_node($1, $3, $2) }
@@ -187,21 +189,28 @@ expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | IDENTIFIER { $$ = add_expression_node($1); }
     ;
 
-loop_operator: while_loop { printf("End of loop\n"); }
-      ;
-
 while_loop: WHILE OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); };
+
+for_loop: FOR IDENTIFIER IN expression TO expression BEGIN_KW body_list END { $$ = add_for_loop($2, $4, $6, $8); };
 
 invocation: IDENTIFIER OPEN_ROUND_BRACKETS enumeration CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); $$ = add_invocation($1, $3); };
 
 comment: ONE_STRING_COMMENT { printf("Comment ignoring\n") };
 
-var_type: STRING { $$ = $1; }
-        | INTEGER { $$ = $1; }
-        | FLOAT { $$ = $1; }
-        | DOUBLE { $$ = $1; }
-        | SHAPE { $$ = $1; }
-        | CONTEXT { $$ = $1; };
+user_var_type: STRING { $$ = to_user_type($1); }
+        | INTEGER { $$ = to_user_type($1); }
+        | DOUBLE { $$ = to_user_type($1); }
+        ;
+
+system_var_type: SHAPE { $$ = to_system_type($1); }
+        | CONTEXT { $$ = to_system_type($1); }
+        ;
+
+create_line_node: LINE OPEN_ROUND_BRACKETS IDENTIFIER COMMA expression COMMA expression CLOSE_ROUND_BRACKETS { $$ = add_create_line_node($3, $5, $7)}
+
+if_else_statement: IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec ELSE if_else_statement;
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec ELSE BEGIN_KW body_list END;
 
 
 %%

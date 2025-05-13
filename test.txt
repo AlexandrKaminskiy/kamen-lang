@@ -1,13 +1,17 @@
-function hui(): Context
+function hui(): Integer
 begin
-    '''I am happy'''
-    '''Very
-    sad '''
+    a := Line(test, 1, 2)
+    for i in 1 to 9
+    begin
+        e := 3.4
+    end
     les := 12
     while (!(i + 3 > 5))
     begin
         invoke()
-        var lesha: Integer
+        var lesha: Shape
     end
+
+
     return 21.3 + 34 / (5 + invoke(2+3)) + test
 end
