@@ -145,8 +145,15 @@ std::string _print_create_line(AstNode *root) {
     }
 
     return "CREATE LINE INVOCATION, VARIABLE " + std::string(root->member->create_line.name) + " ";
-
 }
+
+// std::string _print_if_block(AstNode *root) {
+//     if (root == nullptr) {
+//         return "";
+//     }
+//
+//     return "IF_ELSE_BLOCK ";
+// }
 
 std::string _print_expression(AstNode *root) {
     if (root == nullptr) {
@@ -199,6 +206,7 @@ std::string _print_nt(NonTerminal non_terminal, AstNode *root) {
         case NT_INVOCATION: return "NT_INVOCATION " + _print_invocation(root);
         case NT_ENUMERATION: return "NT_ENUMERATION" + _print_enumeration(root); ;
         case NT_CREATE_LINE: return "NT_CREATE_LINE " + _print_create_line(root); ;
+        case NT_IF_BLOCK: return "NT_IF_BLOCK ";
     }
 }
 
@@ -358,4 +366,13 @@ AstNode *add_create_line_node(char *name, AstNode *first, AstNode *second) {
     AstNode *root = create_nodes(NT_CREATE_LINE, {first, second});
     root->member->create_line.name = strdup(name);
     return root;
+}
+
+AstNode *add_if_statement(AstNode *if_block, AstNode *if_body) {
+    AstNode *root = create_nodes(NT_IF_BLOCK, {if_block, if_body});
+
+}
+
+AstNode *add_if_statement(AstNode *if_block, AstNode *if_body, AstNode *else_block, AstNode *else_body) {
+
 }

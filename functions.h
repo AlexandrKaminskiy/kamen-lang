@@ -43,6 +43,7 @@ typedef enum {
     NT_INVOCATION,
     NT_ENUMERATION,
     NT_CREATE_LINE,
+    NT_IF_BLOCK,
 } NonTerminal;
 
 typedef enum {
@@ -183,3 +184,7 @@ AstNode *add_invocation(char *name, AstNode *enumeration);
 AstNode *add_for_loop(char *loop_var, AstNode *from, AstNode *to, AstNode *body);
 
 AstNode *add_create_line_node(char *name, AstNode *first, AstNode *second);
+
+AstNode *add_if_statement(AstNode *if_block, AstNode *if_body);
+
+AstNode *add_if_statement(AstNode *if_block, AstNode *if_body, AstNode *else_block, AstNode *else_body);

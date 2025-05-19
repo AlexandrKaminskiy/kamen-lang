@@ -12,6 +12,13 @@ begin
         var lesha: Shape
     end
 
-
+    if (i>3)
+    begin
+        invoke()
+    end
+    else if (i > 3)
+    begin
+        invoke()
+    end
     return 21.3 + 34 / (5 + invoke(2+3)) + test
 end

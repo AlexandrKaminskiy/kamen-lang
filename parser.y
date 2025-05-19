@@ -90,8 +90,12 @@ void yyerror(char *);
 %left MULT
 %left DIV
 
+%nonassoc IF
+%nonassoc ELSE
+
 %type <num> user_var_type
 %type <num> system_var_type
+%type <node> if_else_statement
 %type <node> program
 %type <node> function
 %type <node> procedure
@@ -156,6 +160,7 @@ body: declare_variable { $$ = create_nodes(NT_BODY, {$1}); }
       | while_loop { $$ = create_nodes(NT_BODY, {$1}); }
       | for_loop { $$ = create_nodes(NT_BODY, {$1}); }
       | comment { $$ = nullptr; }
+      | if_else_statement { $$ = $$; }
       | invocation { $$ = create_nodes(NT_BODY, {$1}); }
       ;
 
@@ -208,9 +213,10 @@ system_var_type: SHAPE { $$ = to_system_type($1); }
 
 create_line_node: LINE OPEN_ROUND_BRACKETS IDENTIFIER COMMA expression COMMA expression CLOSE_ROUND_BRACKETS { $$ = add_create_line_node($3, $5, $7)}
 
-if_else_statement: IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END
-        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec ELSE if_else_statement;
-        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec ELSE BEGIN_KW body_list END;
+if_else_statement: IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec IF { $$ = create_nodes(NT_IF_BLOCK, {$3, $6});}
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END ELSE if_else_statement { $$ = create_nodes(NT_IF_BLOCK, {$3, $6, $9});}
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END ELSE BEGIN_KW body_list END { $$ = create_nodes(NT_IF_BLOCK, {$3, $6, $10});}
+        ;
 
 
 %%
