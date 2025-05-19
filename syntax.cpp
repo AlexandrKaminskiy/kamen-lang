@@ -1,20 +1,8 @@
-#include "functions.h"
+#include "syntax.h"
 #include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
-
-
-
-void mylog(std::string string) {
-    // Identifiers identifier = Identifiers();
-    // identifier.name = string.c_str();
-    // identifier.scope_level = 1;
-    // identifier.type = "function";
-    //
-    // identifiers.push_back(identifier);
-    // std::cout << string << std::endl;
-}
 
 std::string to_user_type(UserType user_type) {
     switch (user_type) {

@@ -1,6 +1,6 @@
 %{
 
-#include "functions.h"
+#include "syntax.h"
 
 extern FILE *yyin;
 int yyparse(void);

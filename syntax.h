@@ -131,8 +131,6 @@ inline AstNode *root_node_ptr = &root_node;
 
 AstNode *create_node(NonTerminal non_terminal);
 
-void mylog(std::string string);
-
 UserType to_user_type(std::string string);
 
 std::string to_user_type(UserType user_type);

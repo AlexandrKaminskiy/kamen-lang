@@ -28,7 +28,7 @@ include_directories(
 add_executable(calc
         ${BISON_Parser_OUTPUTS}
         ${FLEX_Scanner_OUTPUTS}
-        functions.cpp
+        syntax.cpp
 )
 
 # Линковка с libfl
