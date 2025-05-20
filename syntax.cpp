@@ -68,7 +68,7 @@ AstNode *add_seq_node(AstNode *what) {
 
 void print_tree() {
     cout << "Printing tree" << endl;
-    cout << _print_tree(root_node_ptr->next, "", "");
+    cout << _print_tree(root_node_ptr, "", "");
 }
 
 std::string _print_declare_variable(AstNode *root) {
@@ -97,7 +97,15 @@ std::string _print_function(AstNode *root) {
 
     std::string result = "NAME " + std::string(root->member->function_declaration.name) + " ";
     result += ("RETURN TYPE " + to_user_type(root->member->function_declaration.return_type) + " ");
-    result += _print_tree(root->next, "", "");
+    return result;
+}
+
+std::string _print_procedure(AstNode *root) {
+    if (root == nullptr) {
+        return "";
+    }
+
+    std::string result = "NAME " + std::string(root->member->procedure_declaration.name) + " ";
     return result;
 }
 
@@ -179,9 +187,9 @@ std::string _print_expression(AstNode *root) {
 
 std::string _print_nt(NonTerminal non_terminal, AstNode *root) {
     switch (non_terminal) {
-        case NT_PROGRAM: return "NT_PROGRAM";
+        case NT_PROGRAM: return "NT_PROGRAM ";
         case NT_FUNCTION: return "NT_FUNCTION " + _print_function(root);
-        case NT_PROCEDURE: return "NT_PROCEDURE";
+        case NT_PROCEDURE: return "NT_PROCEDURE " + _print_procedure(root);
         case NT_SUBPROG_PARAMS: return "NT_SUBPROG_PARAMS";
         case NT_FOR_LOOP: return "NT_FOR_LOOP " + _print_for_loop(root);
         case NT_FUNCTION_BODY: return "NT_FUNCTION_BODY";
@@ -216,6 +224,13 @@ AstNode *add_function_node(char* name, UserType return_type, AstNode *subprog_pa
     root->member->function_declaration.return_type = return_type;
     return root;
 }
+
+AstNode *add_procedure_node(char *name, AstNode *subprog_params, AstNode *procedure_body) {
+    AstNode *root = create_nodes(NT_PROCEDURE, {subprog_params, procedure_body});
+    root->member->procedure_declaration.name = strdup(name);
+    return root;
+}
+
 
 AstNode *add_body_node(AstNode *body) {
     AstNode *root = create_node(NT_BODY);

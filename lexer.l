@@ -13,7 +13,7 @@ char msl_buffer[8192];
 %x MULTIPLE_STRING
 
 %%
-#[^\n]*                                         { printf("ONE STRING COMMENT: %s\n", yytext); return ONE_STRING_COMMENT; }
+#[^\n]*                                         { printf("ONE STRING COMMENT: %s\n", yytext); }
 begin                                           { printf("KEYWORD begin: %s\n", yytext); return BEGIN_KW;}
 end                                             { printf("KEYWORD end: %s\n", yytext); return END;}
 if                                              { printf("KEYWORD if: %s\n", yytext); return IF;}

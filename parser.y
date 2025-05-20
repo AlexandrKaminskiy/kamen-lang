@@ -96,6 +96,7 @@ void yyerror(char *);
 %type <num> user_var_type
 %type <num> system_var_type
 %type <node> if_else_statement
+%type <node> sub_programs
 %type <node> program
 %type <node> function
 %type <node> procedure
@@ -116,30 +117,25 @@ void yyerror(char *);
 
 %%
 
-program: {  }
-      | function program  {  root_node_ptr = add_seq_node($1); print_tree(); printf("End of the program"); }
-      | procedure program {  root_node_ptr = add_seq_node($1); print_tree(); printf("End of the program"); }
+program: sub_programs { root_node_ptr = $1; print_tree(); }
+
+sub_programs: { printf("End of the sub_program "); $$ = create_node(NT_PROGRAM); }
+      | sub_programs function { printf("End of the function "); $$ = add_equal_node($1, $2); }
+      | sub_programs procedure { printf("End of the procedure "); $$ = add_equal_node($1, $2); }
       ;
 
 function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON user_var_type BEGIN_KW function_body END {
-    printf("End of the function %d\n", $7);
     $$ = add_function_node($2, (UserType) $7, $4, $9);
 };
 
 procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS BEGIN_KW body_list END {
-    AstNode* root = create_node(NT_PROCEDURE);
-    AstNode* node0 = add_seq_node($4);
-    AstNode* node1 = add_seq_node($7);
-    node0->next = node1;
-    root->next = node0;
-    printf("End of the procedure\n");
-    $$ = root
+    $$ = add_procedure_node($2, $4, $7);
 };
 
 
-subprog_params: { printf("End of the subprog_params\n"); $$ = create_node(NT_SUBPROG_PARAMS); }
-      | declare_variable COMMA subprog_params { printf("End of the subprog_params\n"); $$ = add_equal_node($3, $1); }
-      | declare_variable { printf("End of the subprog_params\n"); $$ = create_nodes(NT_SUBPROG_PARAMS, {$1}); }
+subprog_params: { $$ = create_node(NT_SUBPROG_PARAMS); }
+      | declare_variable COMMA subprog_params {  $$ = add_equal_node($3, $1); }
+      | declare_variable { $$ = create_nodes(NT_SUBPROG_PARAMS, {$1}); }
       ;
 
 enumeration: { $$ = create_node(NT_ENUMERATION); }
@@ -150,8 +146,8 @@ enumeration: { $$ = create_node(NT_ENUMERATION); }
 function_body: body_list RETURN expression { printf("End of the function_body\n"); $$ = create_nodes(NT_FUNCTION_BODY, {$1, $3}); }
       ;
 
-body_list: { printf("1 End of the body_list"); $$ = create_node(NT_BODY_LIST); }
-      | body_list body  { printf("2 End of the body_list"); $$ = add_equal_node($1, $2); }
+body_list: { $$ = create_node(NT_BODY_LIST); }
+      | body_list body  { $$ = add_equal_node($1, $2); }
       ;
 
 body: declare_variable { $$ = create_nodes(NT_BODY, {$1}); }

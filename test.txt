@@ -22,3 +22,27 @@ begin
     end
     return 21.3 + 34 / (5 + invoke(2+3)) + test
 end
+
+procedure hui1()
+begin
+    a := Line(test, 1, 2)
+    for i in 1 to 9
+    begin
+        e := 3.4
+    end
+    les := 12
+    while (!(i + 3 > 5))
+    begin
+        invoke()
+        var lesha: Shape
+    end
+
+    if (i>3)
+    begin
+        invoke()
+    end
+    else if (i > 3)
+    begin
+        invoke()
+    end
+end

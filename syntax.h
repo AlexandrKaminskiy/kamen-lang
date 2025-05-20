@@ -29,6 +29,7 @@ typedef enum {
 
 typedef enum {
     NT_PROGRAM = 1,
+    NT_SUBPROGRAMS,
     NT_FUNCTION,
     NT_PROCEDURE,
     NT_SUBPROG_PARAMS,
@@ -80,10 +81,14 @@ typedef struct {
 } VariableAssignation;
 
 typedef struct {
-    AstNode *variable_declarations;
     UserType return_type;
     const char *name;
 } FunctionDeclaration;
+
+typedef struct {
+    UserType return_type;
+    const char *name;
+} ProcedureDeclaration;
 
 typedef struct {
     const char *name;
@@ -121,6 +126,7 @@ union Member {
     VariableAssignation variable_assignation;
     Expression expression;
     FunctionDeclaration function_declaration;
+    ProcedureDeclaration procedure_declaration;
     Invocation invocation;
     ForLoop for_loop;
     CreateLine create_line;
@@ -150,6 +156,8 @@ void print_tree();
 std::string _print_tree(AstNode *root, std::string indent, std::string string);
 
 AstNode *add_function_node(char *name, UserType return_type, AstNode *subprog_params, AstNode *function_body);
+
+AstNode *add_procedure_node(char *name, AstNode *subprog_params, AstNode *procedure_body);
 
 AstNode *create_subprog_param_node();
 
