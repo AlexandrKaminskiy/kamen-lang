@@ -1,6 +1,7 @@
 %{
 
 #include "syntax.h"
+#include "semantic.h"
 
 extern FILE *yyin;
 int yyparse(void);
@@ -117,7 +118,7 @@ void yyerror(char *);
 
 %%
 
-program: sub_programs { root_node_ptr = $1; print_tree(); }
+program: sub_programs { root_node_ptr = $1; print_tree(); test();  }
 
 sub_programs: { printf("End of the sub_program "); $$ = create_node(NT_PROGRAM); }
       | sub_programs function { printf("End of the function "); $$ = add_equal_node($1, $2); }

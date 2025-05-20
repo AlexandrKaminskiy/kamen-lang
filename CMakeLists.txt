@@ -29,6 +29,7 @@ add_executable(calc
         ${BISON_Parser_OUTPUTS}
         ${FLEX_Scanner_OUTPUTS}
         syntax.cpp
+        semantic.cpp
 )
 
 # Линковка с libfl

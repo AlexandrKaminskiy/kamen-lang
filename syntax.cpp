@@ -1,7 +1,5 @@
 #include "syntax.h"
-#include <iostream>
-#include <string>
-#include <vector>
+
 using namespace std;
 
 std::string to_user_type(UserType user_type) {
