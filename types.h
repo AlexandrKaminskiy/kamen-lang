@@ -134,8 +134,9 @@ union Member {
 
 struct Declaration {
     Declaration *parent;
-    std::list<AstNode *> children;
+    std::list<Declaration *> children;
     std::set<std::string> identifiers;
 };
 
+inline Declaration *declaration_root = nullptr;
 #endif

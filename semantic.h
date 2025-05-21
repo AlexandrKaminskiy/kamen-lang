@@ -6,4 +6,6 @@
 
 using namespace std;
 
+Declaration *create_declaration(Declaration *parent);
+
 void make_semantic(AstNode *root);

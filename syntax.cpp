@@ -257,7 +257,8 @@ AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
     cout << "adding assignation node " << name << endl;
     return root;
 }
-
+// 0x600002d00000
+// 0x600002300000 member
 AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.integer = value;
@@ -370,7 +371,7 @@ AstNode *add_create_line_node(char *name, AstNode *first, AstNode *second) {
 }
 
 AstNode *add_if_statement(AstNode *if_block, AstNode *if_body) {
-    AstNode *root = create_nodes(NT_IF_BLOCK, {if_block, if_body});
+    // AstNode *root = create_nodes(NT_IF_BLOCK, {if_block, if_body});
 
 }
 
