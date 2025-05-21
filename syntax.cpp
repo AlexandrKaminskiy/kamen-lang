@@ -243,7 +243,7 @@ AstNode *create_subprog_param_node() {
 
 AstNode *add_variable_declaration_node(const std::string type, const std::string name) {
     AstNode *root = create_node(NT_DECLARE_VARIABLE);
-    const VariableDeclaration variable = {type.c_str(), name.c_str()};
+    const VariableDeclaration variable = {strdup(type.c_str()), strdup(name.c_str())};
     root->member->variable_declaration = variable;
     cout << "adding declaration node " << name << endl;
     return root;
@@ -251,7 +251,7 @@ AstNode *add_variable_declaration_node(const std::string type, const std::string
 
 AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
     AstNode *root = create_node(NT_ASSIGN_VARIABLE);
-    const VariableAssignation variable = {name.c_str()};
+    const VariableAssignation variable = {strdup(name.c_str())};
     root->member->variable_assignation = variable;
     root->tree = value;
     cout << "adding assignation node " << name << endl;
