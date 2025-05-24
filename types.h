@@ -136,6 +136,8 @@ struct Declaration {
     Declaration *parent;
     std::list<Declaration *> children;
     std::set<std::string> identifiers;
+    std::set<UserType> types;
+    std::set<std::string> subprogram_identifiers;
 };
 
 inline Declaration *declaration_root = nullptr;
