@@ -30,6 +30,7 @@ add_executable(calc
         ${FLEX_Scanner_OUTPUTS}
         syntax.cpp
         semantic.cpp
+        types.cpp
 )
 
 # Линковка с libfl

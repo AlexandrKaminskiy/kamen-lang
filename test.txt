@@ -1,19 +1,7 @@
-function invoke(var a: Integer, var b: Integer,): Integer
+procedure h()
 begin
-    if (a>b) begin
-    end
-    return 12
+    var b: Integer
+    var c: Integer
+    c := 1 + b + 23
 
-end
-
-procedure h(var les: Integer)
-begin
-    les:= 10
-
-    for i in 1 to 9
-    begin
-        les := 12
-        var k: Integer
-        r := invoke(1 + k)
-    end
 end

@@ -5,14 +5,79 @@
 
 using namespace std;
 
-Declaration *create_declaration(Declaration *parent) {
+ExpressionInfo *create_expression_info() {
+    auto *info = new ExpressionInfo();
+    return info;
+}
+
+DeclarationInfo *create_declaration_info(const std::string &name, const UserType type) {
+    auto declaration_info = new DeclarationInfo();
+    declaration_info->identifier = name;
+    declaration_info->user_type = type;
+    return declaration_info;
+}
+
+DeclarationInfo *create_declaration_info(const std::string &name) {
+    auto declaration_info = new DeclarationInfo();
+    declaration_info->identifier = name;
+    return declaration_info;
+}
+
+DeclarationInfo *find_var(std::string identifier, std::list<DeclarationInfo *> declaration_infos) {
+    for (const auto declaration_info : declaration_infos) {
+        if (declaration_info->identifier == identifier) {
+            return declaration_info;
+        }
+    }
+    return nullptr;
+}
+
+bool in_correct_node(AstNode* root, AstNode* node_to_find) {
+    if (root == node_to_find) {
+        return true;
+    }
+    if (root->tree != nullptr) {
+        bool result = in_correct_node(root->tree, node_to_find);
+        if (result == true) {
+            return true;
+        }
+    }
+    while (root->next != nullptr) {
+        bool result = in_correct_node(root->next, node_to_find);
+        if (result == true) {
+            return true;
+        }
+        root = root->next;
+    }
+    return false;
+}
+
+DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, string name_to_find) {
+    auto declaration_info = find_var(name_to_find, current->variable_declarations);
+
+    if (declaration_info != nullptr && in_correct_node(current->node, node_to_find)) {
+        cout << "Declaration " << name_to_find << " found!" << endl;
+        return declaration_info;
+    }
+
+    for (Declaration *decl : current->children) {
+        DeclarationInfo* found_decl = find_declaration(decl, node_to_find, name_to_find);
+        if (found_decl != nullptr) {
+            return found_decl;
+        }
+    }
+    return nullptr;
+}
+
+Declaration *create_declaration(Declaration *parent, AstNode *node) {
     auto *root = new Declaration();
+    root->node = node;
     root->parent = parent;
     return root;
 }
 
 bool has_declaration(Declaration *declaration, string variable) {
-    if (declaration->identifiers.find(variable) != declaration->identifiers.end()) {
+    if (find_var(variable, declaration->variable_declarations) != nullptr) {
         return true;
     }
 
@@ -24,7 +89,7 @@ bool has_declaration(Declaration *declaration, string variable) {
 }
 
 bool has_subprog_declaration(Declaration *declaration, string subprogram) {
-    if (declaration->subprogram_identifiers.find(subprogram) != declaration->subprogram_identifiers.end()) {
+    if (find_var(subprogram, declaration->subprogram_declarations) != nullptr) {
         return true;
     }
 
@@ -86,25 +151,26 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
                 cerr << "Variable was already declared " << var_name << endl;
                 return declaration;
             }
+            auto declaration_info = create_declaration_info(var_name, to_user_type(var_type)); // todo
 
-            declaration->identifiers.insert(var_name);
-            // declaration->types.insert();
+            declaration->variable_declarations.push_back(declaration_info);
 
             return declaration;
         }
         case NT_FUNCTION: {
-            declaration->subprogram_identifiers.insert(root->member->function_declaration.name);
-            declaration->types.insert(root->member->function_declaration.return_type);
+            auto declaration_info = create_declaration_info(root->member->function_declaration.name, root->member->function_declaration.return_type);
+            declaration->subprogram_declarations.push_back(declaration_info);
 
-            return create_declaration(declaration);
+            return create_declaration(declaration, root);
         }
         case NT_PROCEDURE: {
-            declaration->subprogram_identifiers.insert(root->member->procedure_declaration.name);
-            return create_declaration(declaration);
+            DeclarationInfo* declaration_info = create_declaration_info(root->member->function_declaration.name);
+            declaration->subprogram_declarations.push_back(declaration_info);
+            return create_declaration(declaration, root);
         }
         case NT_PROGRAM:
         case NT_BODY_LIST: {
-            return create_declaration(declaration);
+            return create_declaration(declaration, root);
         }
 
 
@@ -126,19 +192,45 @@ void check_variable_and_function_visibility(AstNode *root, Declaration *declarat
     }
 }
 
-void handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
+bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
+    cout << "Non-terminal handling..." << to_nt_string(non_terminal) << endl;
     switch (non_terminal) {
         case NT_EXPRESSION: {
+            if (root->member->expression.expression_type == VARIABLE) {
+                DeclarationInfo* declaration_info = find_declaration(declaration_root, root, root->member->expression.identifier);
+                auto var_type = declaration_info->user_type;
+                root->member->expression.type = var_type;
+            }
+            // if (root->member->expression.expression_type == INVOCATION) {
+            //     return;
+            // }
 
+            if (root->member->expression.expression_type == NON_TERMINAL) {
+                if (strcmp(root->member->expression.op, "+") == 0) {
+                    auto left = root->tree;
+                    auto right = root->tree->next;
+                    handle_non_terminal_op(left, left->non_terminal);
+                    handle_non_terminal_op(right, right->non_terminal);
+
+                    if (left->member->expression.type == right->member->expression.type) {
+                        root->member->expression.type = right->member->expression.type;
+                    } else {
+                        cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+                    }
+                }
+            }
+            return true;
         }
+        default: return false;
     }
 }
 
 void check_operation_types(AstNode *root) {
     AstNode *node = root;
     while (node != nullptr) {
-        handle_non_terminal_op(node, node->non_terminal);
-        if (node->tree != nullptr) {
+        bool handled = handle_non_terminal_op(node, node->non_terminal);
+
+        if (!handled && node->tree != nullptr) {
             check_operation_types(node->tree);
         }
         node = node->next;
@@ -146,10 +238,8 @@ void check_operation_types(AstNode *root) {
 }
 
 void make_semantic(AstNode *root) {
-    declaration_root = create_declaration(nullptr);
+    declaration_root = create_declaration(nullptr, root);
     check_variable_and_function_visibility(root, declaration_root);
     check_operation_types(root);
     cout << declaration_root << endl;
 }
-
-

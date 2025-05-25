@@ -3,8 +3,11 @@
 #include <list>
 #include <set>
 
+
 typedef struct AstNode AstNode;
 typedef struct Declaration Declaration;
+typedef struct DeclarationInfo DeclarationInfo;
+typedef struct ExpressionInfo ExpressionInfo;
 typedef union Member member;
 
 /*
@@ -27,6 +30,15 @@ typedef enum {
     TYPE_CONTEXT,
 } SystemType;
 
+
+UserType to_user_type(std::string string);
+
+std::string to_user_type(UserType user_type);
+
+SystemType to_system_type(std::string string);
+
+std::string to_system_type(SystemType system_type);
+
 typedef enum {
     NT_PROGRAM = 1,
     NT_SUBPROGRAMS,
@@ -46,6 +58,8 @@ typedef enum {
     NT_CREATE_LINE,
     NT_IF_BLOCK,
 } NonTerminal;
+
+std::string to_nt_string(NonTerminal non_terminal);
 
 typedef enum {
     TERMINAL = 1,
@@ -134,10 +148,24 @@ union Member {
 
 struct Declaration {
     Declaration *parent;
+    AstNode *node;
     std::list<Declaration *> children;
-    std::set<std::string> identifiers;
-    std::set<UserType> types;
-    std::set<std::string> subprogram_identifiers;
+
+    std::list<DeclarationInfo *> variable_declarations;
+    std::list<DeclarationInfo *> subprogram_declarations;
+};
+
+struct DeclarationInfo {
+    UserType user_type;
+    SystemType system_type;
+    std::string identifier;
+};
+
+struct ExpressionInfo {
+    AstNode *node;
+    UserType type;
+    ExpressionInfo *parent;
+    std::list<ExpressionInfo *> children;
 };
 
 inline Declaration *declaration_root = nullptr;

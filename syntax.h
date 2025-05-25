@@ -1,4 +1,4 @@
-#include <types.h>
+#include "types.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -9,14 +9,6 @@ inline AstNode root_node = AstNode();
 inline AstNode *root_node_ptr = &root_node;
 
 AstNode *create_node(NonTerminal non_terminal);
-
-UserType to_user_type(std::string string);
-
-std::string to_user_type(UserType user_type);
-
-SystemType to_system_type(std::string string);
-
-std::string to_system_type(SystemType system_type);
 
 AstNode *add_seq_node(AstNode *what);
 
