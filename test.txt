@@ -2,7 +2,10 @@ procedure h()
 begin
     var a: Boolean
     var b: Double
-    var c: Integer
-    c := 1.1 + b
+    var c: Boolean
+
+    a := true && false
+
+    c := 1.1 + b = 0 = a
 
 end

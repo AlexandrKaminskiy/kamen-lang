@@ -192,6 +192,56 @@ void check_variable_and_function_visibility(AstNode *root, Declaration *declarat
     }
 }
 
+void handle_arith_ops(AstNode* root, AstNode *left, AstNode *right) {
+    if (left->member->expression.type == TYPE_INTEGER && right->member->expression.type == TYPE_INTEGER) {
+        root->member->expression.type = TYPE_INTEGER;
+        return;
+    }
+
+    if ((left->member->expression.type == TYPE_DOUBLE || left->member->expression.type == TYPE_INTEGER) &&
+        (right->member->expression.type == TYPE_DOUBLE || right->member->expression.type == TYPE_INTEGER)) {
+        root->member->expression.type = TYPE_DOUBLE;
+        return;
+    }
+    cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+}
+
+void handle_comp_ops(AstNode* root, AstNode *left, AstNode *right) {
+
+    if ((left->member->expression.type == TYPE_DOUBLE || left->member->expression.type == TYPE_INTEGER) &&
+        (right->member->expression.type == TYPE_DOUBLE || right->member->expression.type == TYPE_INTEGER)) {
+        root->member->expression.type = TYPE_BOOLEAN;
+        return;
+    }
+
+    if (left->member->expression.type == TYPE_BOOLEAN || right->member->expression.type == TYPE_BOOLEAN) {
+        root->member->expression.type = TYPE_BOOLEAN;
+        return;
+    }
+
+    cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+}
+
+void handle_logical_bi_ops(AstNode* root, AstNode *left, AstNode *right) {
+
+    if (left->member->expression.type == TYPE_BOOLEAN || right->member->expression.type == TYPE_BOOLEAN) {
+        root->member->expression.type = TYPE_BOOLEAN;
+        return;
+    }
+
+    cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+}
+
+void handle_logical_unary_ops(AstNode* root, AstNode *left) {
+
+    if (left->member->expression.type == TYPE_BOOLEAN) {
+        root->member->expression.type = TYPE_BOOLEAN;
+        return;
+    }
+
+    cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+}
+
 bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
     cout << "Non-terminal handling..." << to_nt_string(non_terminal) << endl;
     switch (non_terminal) {
@@ -206,16 +256,22 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             // }
 
             if (root->member->expression.expression_type == NON_TERMINAL) {
-                if (strcmp(root->member->expression.op, "+") == 0) {
+                if (bi_operators.find(string(root->member->expression.op)) != bi_operators.end()) {
                     auto left = root->tree;
                     auto right = root->tree->next;
                     handle_non_terminal_op(left, left->non_terminal);
                     handle_non_terminal_op(right, right->non_terminal);
-
-                    if (left->member->expression.type == right->member->expression.type) {
-                        root->member->expression.type = right->member->expression.type;
-                    } else {
-                        cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+                    if (arith_operators.find(string(root->member->expression.op)) != arith_operators.end()) {
+                        handle_arith_ops(root, left, right);
+                        return true;
+                    }
+                    if (comp_operators.find(string(root->member->expression.op)) != comp_operators.end()) {
+                        handle_comp_ops(root, left, right);
+                        return true;
+                    }
+                    if (logic_bi_operators.find(string(root->member->expression.op)) != logic_bi_operators.end()) {
+                        handle_logical_bi_ops(root, left, right);
+                        return true;
                     }
                 }
             }

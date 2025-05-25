@@ -39,7 +39,7 @@ SystemType to_system_type(std::string string);
 
 std::string to_system_type(SystemType system_type);
 
-bool to_bool(char* string);
+bool to_bool(char *string);
 
 typedef enum {
     NT_PROGRAM = 1,
@@ -172,4 +172,11 @@ struct ExpressionInfo {
 };
 
 inline Declaration *declaration_root = nullptr;
+
+inline std::set<std::string> bi_operators{"+", "-", "*", "/", "mod", ">", "<", ">=", "<=", "=", "&&", "||"};
+inline std::set<std::string> arith_operators{"+", "-", "*", "/", "mod"};
+inline std::set<std::string> comp_operators{">", "<", ">=", "<=", "="};
+inline std::set<std::string> logic_bi_operators{"&&", "||"};
+inline std::set<std::string> logic_un_operators{"!"};
+inline std::set<std::string> un_operators{"!"};
 #endif
