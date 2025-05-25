@@ -39,6 +39,8 @@ SystemType to_system_type(std::string string);
 
 std::string to_system_type(SystemType system_type);
 
+bool to_bool(char* string);
+
 typedef enum {
     NT_PROGRAM = 1,
     NT_SUBPROGRAMS,
@@ -78,6 +80,7 @@ typedef enum {
 typedef union {
     int integer;
     float floating;
+    bool boolean;
     const char *string;
 } Value;
 

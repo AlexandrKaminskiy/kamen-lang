@@ -68,3 +68,10 @@ SystemType to_system_type(std::string string) {
 
     return S_TYPE_INCORRECT;
 }
+
+bool to_bool(char* string) {
+    if (strcmp(string, "true") == 0) {
+        return true;
+    }
+    return false;
+}

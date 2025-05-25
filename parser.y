@@ -12,6 +12,7 @@ void yyerror(char *);
 
 %union {
     int    num;
+    char*  boolean;
     float  frac;
     char*  string;
     AstNode* node;
@@ -32,10 +33,11 @@ void yyerror(char *);
 %token RETURN
 %token <frac> E
 %token <frac> PI
-%token <num> TRUE
-%token <num> FALSE
+%token <boolean> TRUE
+%token <boolean> FALSE
 %token <string> STRING
 %token <string> INTEGER
+%token <string> BOOLEAN
 %token <string> FLOAT
 %token <string> DOUBLE
 %token <string> SHAPE
@@ -184,6 +186,8 @@ expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | NOT expression { $$ = add_expression_node($2, $1) }
     | expression OR expression { $$ = add_expression_node($1, $3, $2) }
     | INTEGER_NUMBER { $$ = add_expression_node($1); }
+    | TRUE { $$ = add_expression_node(to_bool($1)); }
+    | FALSE { $$ = add_expression_node(to_bool($1)); }
     | DOUBLE_NUMBER { $$ = add_expression_node($1); }
     | STRING_LITERAL { $$ = add_expression_node($1, 0); }
     | invocation { $$ = create_nodes(NT_EXPRESSION, {$1}); }
@@ -202,6 +206,7 @@ comment: ONE_STRING_COMMENT { printf("Comment ignoring\n") };
 user_var_type: STRING { $$ = to_user_type($1); }
         | INTEGER { $$ = to_user_type($1); }
         | DOUBLE { $$ = to_user_type($1); }
+        | BOOLEAN { $$ = to_user_type($1); }
         ;
 
 system_var_type: SHAPE { $$ = to_system_type($1); }

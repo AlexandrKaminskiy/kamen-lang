@@ -120,6 +120,10 @@ std::string _print_expression(AstNode *root) {
         if (root->member->expression.type == TYPE_STRING) {
             return to_user_type(root->member->expression.type) + " " + std::string(root->member->expression.value.string);
         }
+
+        if (root->member->expression.type == TYPE_BOOLEAN) {
+            return to_user_type(root->member->expression.type) + " " + to_string(root->member->expression.value.boolean);
+        }
     }
 
     if (root->member->expression.expression_type == NON_TERMINAL) {
@@ -217,6 +221,14 @@ AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.integer = value;
     root->member->expression.type = TYPE_INTEGER;
+    root->member->expression.expression_type = TERMINAL;
+    return root;
+}
+
+AstNode *add_expression_node(bool value) {
+    auto root = create_node(NT_EXPRESSION);
+    root->member->expression.value.boolean = value;
+    root->member->expression.type = TYPE_BOOLEAN;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }

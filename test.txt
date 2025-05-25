@@ -1,7 +1,8 @@
 procedure h()
 begin
-    var b: Integer
+    var a: Boolean
+    var b: Double
     var c: Integer
-    c := 1 + b + 23
+    c := 1.1 + b
 
 end

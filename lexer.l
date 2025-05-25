@@ -35,12 +35,13 @@ Text                                            { printf("KEYWORD Text: %s\n", y
 
 E                                               { printf("CONSTANT E: %s\n", yytext); return E;}
 PI                                              { printf("CONSTANT PI: %s\n", yytext); return PI;}
-true                                            { printf("CONSTANT true: %s\n", yytext); return TRUE;}
-false                                           { printf("CONSTANT false: %s\n", yytext); return FALSE;}
+true                                            { printf("CONSTANT true: %s\n", yytext); yylval.boolean = strdup(yytext); return TRUE;}
+false                                           { printf("CONSTANT false: %s\n", yytext); yylval.boolean = strdup(yytext); return FALSE;}
 
 String                                          { printf("TYPE String: %s\n", yytext); yylval.string = strdup(yytext); return STRING;}
 Integer                                         { printf("TYPE Integer: %s\n", yytext); yylval.string = strdup(yytext); return INTEGER;}
 Double                                          { printf("TYPE Double: %s\n", yytext); yylval.string = strdup(yytext); return DOUBLE;}
+Boolean                                         { printf("TYPE Boolean: %s\n", yytext); yylval.string = strdup(yytext); return BOOLEAN;}
 Shape                                           { printf("TYPE Shape: %s\n", yytext); yylval.string = strdup(yytext); return SHAPE;}
 Context                                         { printf("TYPE Context: %s\n", yytext); yylval.string = strdup(yytext); return CONTEXT;}
 

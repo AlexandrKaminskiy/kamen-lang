@@ -38,6 +38,8 @@ AstNode *add_expression_node();
 
 AstNode *add_expression_node(int value);
 
+AstNode *add_expression_node(bool value);
+
 AstNode *add_expression_node(float value);
 
 AstNode *add_expression_node(char* value, int stub); //todo fix
