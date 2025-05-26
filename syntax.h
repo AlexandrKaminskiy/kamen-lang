@@ -20,7 +20,7 @@ void print_tree();
 
 std::string _print_tree(AstNode *root, std::string indent, std::string string);
 
-AstNode *add_function_node(char *name, UserType return_type, AstNode *subprog_params, AstNode *function_body);
+AstNode *add_function_node(char *name, UserType return_type, AstNode *subprog_params, AstNode *function_body, AstNode *return_statement);
 
 AstNode *add_procedure_node(char *name, AstNode *subprog_params, AstNode *procedure_body);
 

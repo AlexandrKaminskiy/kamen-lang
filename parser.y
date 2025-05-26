@@ -127,8 +127,8 @@ sub_programs: { printf("End of the sub_program "); $$ = create_node(NT_PROGRAM);
       | sub_programs procedure { printf("End of the procedure "); $$ = add_equal_node($1, $2); }
       ;
 
-function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON user_var_type BEGIN_KW function_body END {
-    $$ = add_function_node($2, (UserType) $7, $4, $9);
+function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON user_var_type BEGIN_KW body_list RETURN expression END {
+    $$ = add_function_node($2, (UserType) $7, $4, $9, $11);
 };
 
 procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS BEGIN_KW body_list END {
@@ -190,7 +190,7 @@ expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | FALSE { $$ = add_expression_node(to_bool($1)); }
     | DOUBLE_NUMBER { $$ = add_expression_node($1); }
     | STRING_LITERAL { $$ = add_expression_node($1, 0); }
-    | invocation { $$ = create_nodes(NT_EXPRESSION, {$1}); }
+    | invocation { $$ = add_expression_invocation_node($1); }
     | OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS { $$ = add_expression_node($2); }
     | IDENTIFIER { $$ = add_expression_node($1); }
     ;

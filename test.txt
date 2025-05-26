@@ -1,10 +1,13 @@
 function h1(var i: Integer): Integer
 begin
-    return 1
+    var a: Integer
+    b := 2
+    return 1.1
 end
 
 procedure h(var i: Integer)
 begin
     var h: Integer
-    h := h1(2)
+    h := 2 + 1
+    h := h1(true)
 end

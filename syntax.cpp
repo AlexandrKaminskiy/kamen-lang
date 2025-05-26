@@ -137,7 +137,9 @@ std::string _print_expression(AstNode *root) {
         return " " + to_user_type(root->member->expression.type) + " " + "VARIABLE " + std::string(root->member->expression.identifier);
     }
 
-
+    if (root->member->expression.expression_type == INVOCATION) {
+        return " " + to_user_type(root->member->expression.type) + " " + "INVOCATION ";
+    }
 
     return "";
 }
@@ -176,8 +178,8 @@ std::string _print_tree(AstNode *root, std::string indent, std::string string) {
     return string;
 }
 
-AstNode *add_function_node(char* name, UserType return_type, AstNode *subprog_params, AstNode *function_body) {
-    AstNode *root = create_nodes(NT_FUNCTION, {subprog_params, function_body});
+AstNode *add_function_node(char* name, UserType return_type, AstNode *subprog_params, AstNode *function_body, AstNode *return_statement) {
+    AstNode *root = create_nodes(NT_FUNCTION, {subprog_params, function_body, return_statement});
     root->member->function_declaration.name = strdup(name);
     root->member->function_declaration.return_type = return_type;
     return root;
@@ -221,7 +223,7 @@ AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
 // 0x600002300000 member
 AstNode *add_expression_invocation_node(AstNode *node) {
     auto root = create_node(NT_EXPRESSION);
-    root->member->expression.node = node;
+    root->tree = node;
     root->member->expression.expression_type = INVOCATION;
     return root;
 }

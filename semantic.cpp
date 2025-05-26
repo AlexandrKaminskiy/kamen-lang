@@ -294,6 +294,16 @@ void handle_logical_unary_ops(AstNode* root, AstNode *left) {
 bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
     cout << "Non-terminal handling..." << to_nt_string(non_terminal) << endl;
     switch (non_terminal) {
+        case NT_FUNCTION: {
+            auto subprogram_info = subprogram_declarations[root->member->function_declaration.name];
+
+            auto return_node = root->tree->next->next;
+            handle_non_terminal_op(return_node, return_node->non_terminal);
+            if (subprogram_info->return_type != return_node->member->expression.type) {
+                cerr << "Incorrect return type. Expected: " << to_user_type(subprogram_info->return_type) << ". Given: " << to_user_type(return_node->member->expression.type) << endl;
+            }
+            return true;
+        }
         case NT_WHILE_LOOP: {
             auto condition_expression = root->tree;
             handle_non_terminal_op(condition_expression, condition_expression->non_terminal);
@@ -352,16 +362,14 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 return true;
             }
             if (root->member->expression.expression_type == INVOCATION) {
-                auto subprogram_info = subprogram_declarations[root->member->invocation.identifier];
+                auto invocation = root->tree;
+                auto subprogram_info = subprogram_declarations[invocation->member->invocation.identifier];
                 auto left = root->tree;
                 handle_non_terminal_op(left, left->non_terminal);
 
                 root->member->expression.type = subprogram_info->return_type;
                 return true;
             }
-            // if (root->member->expression.expression_type == INVOCATION) {
-            //     return;
-            // }
 
             if (root->member->expression.expression_type == NON_TERMINAL) {
                 if (root->member->expression.op == nullptr) {
