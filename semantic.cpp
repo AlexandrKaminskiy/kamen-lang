@@ -100,6 +100,30 @@ bool has_subprog_declaration(Declaration *declaration, string subprogram) {
     return false;
 }
 
+SubprogramDeclaration *create_subprogram_declaration(bool is_function, UserType type, AstNode *variable_declarations) {
+    SubprogramDeclaration *subprogram = new SubprogramDeclaration();
+    subprogram->is_function = is_function;
+    subprogram->return_type = type;
+
+    while (variable_declarations != nullptr) {
+        subprogram->variable_types.push_back(to_user_type(variable_declarations->member->variable_declaration.type));
+        variable_declarations = variable_declarations->next;
+    }
+    // subprogram->variable_declarations = variable_declarations;
+    return subprogram;
+}
+
+SubprogramDeclaration *create_subprogram_declaration(bool is_function, AstNode *variable_declarations) {
+    SubprogramDeclaration *subprogram = new SubprogramDeclaration();
+    subprogram->is_function = is_function;
+
+    while (variable_declarations != nullptr) {
+        subprogram->variable_types.push_back(to_user_type(variable_declarations->member->variable_declaration.type));
+        variable_declarations = variable_declarations->next;
+    }
+    return subprogram;
+}
+
 Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, Declaration *declaration) {
     switch (non_terminal) {
 
@@ -141,6 +165,18 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
 
             return declaration;
         }
+        case NT_FOR_LOOP: {
+            string var_name = string(root->member->for_loop.name);
+            bool ha = has_declaration(declaration, var_name);
+            if (ha) {
+                cerr << "Variable was already declared " << var_name << endl;
+                return declaration;
+            }
+            auto declaration_info = create_declaration_info(var_name, TYPE_INTEGER); // todo
+            declaration->variable_declarations.push_back(declaration_info);
+
+            return declaration;
+        }
         case NT_DECLARE_VARIABLE: {
             string var_name = string(root->member->variable_declaration.name);
             string var_type = string(root->member->variable_declaration.type);
@@ -159,13 +195,26 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
         }
         case NT_FUNCTION: {
             auto declaration_info = create_declaration_info(root->member->function_declaration.name, root->member->function_declaration.return_type);
+
+            if (subprogram_declarations.count(root->member->function_declaration.name) > 0) {
+                cerr << "Subprogram was declared " << declaration_info->identifier << endl;
+            }
+            auto subprogram_declaration = create_subprogram_declaration(true, root->member->function_declaration.return_type, root->tree->tree);
+            subprogram_declarations[string(root->member->function_declaration.name)] = subprogram_declaration;
             declaration->subprogram_declarations.push_back(declaration_info);
 
             return create_declaration(declaration, root);
         }
         case NT_PROCEDURE: {
             DeclarationInfo* declaration_info = create_declaration_info(root->member->function_declaration.name);
+
+            if (subprogram_declarations.count(root->member->function_declaration.name) > 0) {
+                cerr << "Subprogram was declared " << declaration_info->identifier << endl;
+            }
+            auto subprogram_declaration = create_subprogram_declaration(false, root->tree->tree);
+            subprogram_declarations[string(root->member->function_declaration.name)] = subprogram_declaration;
             declaration->subprogram_declarations.push_back(declaration_info);
+
             return create_declaration(declaration, root);
         }
         case NT_PROGRAM:
@@ -245,17 +294,82 @@ void handle_logical_unary_ops(AstNode* root, AstNode *left) {
 bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
     cout << "Non-terminal handling..." << to_nt_string(non_terminal) << endl;
     switch (non_terminal) {
+        case NT_WHILE_LOOP: {
+            auto condition_expression = root->tree;
+            handle_non_terminal_op(condition_expression, condition_expression->non_terminal);
+            if (condition_expression->member->expression.type != TYPE_BOOLEAN) {
+                cerr << "Incorrect type for while loop condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
+            }
+            return true;
+        }
+        case NT_IF_BLOCK: {
+            auto condition_expression = root->tree;
+            handle_non_terminal_op(condition_expression, condition_expression->non_terminal);
+            if (condition_expression->member->expression.type != TYPE_BOOLEAN) {
+                cerr << "Incorrect type for if condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
+            }
+            return true;
+        }
+        case NT_INVOCATION: {
+            auto subprogram_info = subprogram_declarations[root->member->invocation.identifier];
+            auto var_type = subprogram_info->variable_types.begin();
+
+            auto param = root->tree->tree;
+            while (param != nullptr) {
+                handle_non_terminal_op(param, param->non_terminal);
+                if (param->member->expression.type != *var_type) {
+                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier;
+                }
+                ++var_type;
+                param = param->next;
+                if ((var_type == subprogram_info->variable_types.end() && param != nullptr)
+                    || (var_type != subprogram_info->variable_types.end() && param == nullptr)) {
+                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier;
+                    break;
+                }
+            }
+            if ((var_type == subprogram_info->variable_types.end() && param != nullptr)
+                || (var_type != subprogram_info->variable_types.end() && param == nullptr)) {
+                cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier;
+            }
+
+            return true;
+        }
+        case NT_ASSIGN_VARIABLE: {
+            auto declaration_info = find_declaration(declaration_root, root, root->member->variable_assignation.name);
+            auto expression = root->tree;
+            handle_non_terminal_op(expression, expression->non_terminal);
+            if (expression->member->expression.type != declaration_info->user_type) {
+                cerr << "Incorrect type for variable assignation. Expected:  " << to_user_type(declaration_info->user_type) << ". Given: " << to_user_type(expression->member->expression.type) << endl;
+            }
+            return true;
+        }
         case NT_EXPRESSION: {
             if (root->member->expression.expression_type == VARIABLE) {
                 DeclarationInfo* declaration_info = find_declaration(declaration_root, root, root->member->expression.identifier);
                 auto var_type = declaration_info->user_type;
                 root->member->expression.type = var_type;
+                return true;
+            }
+            if (root->member->expression.expression_type == INVOCATION) {
+                auto subprogram_info = subprogram_declarations[root->member->invocation.identifier];
+                auto left = root->tree;
+                handle_non_terminal_op(left, left->non_terminal);
+
+                root->member->expression.type = subprogram_info->return_type;
+                return true;
             }
             // if (root->member->expression.expression_type == INVOCATION) {
             //     return;
             // }
 
             if (root->member->expression.expression_type == NON_TERMINAL) {
+                if (root->member->expression.op == nullptr) {
+                    auto left = root->tree;
+                    handle_non_terminal_op(left, left->non_terminal);
+                    root->member->expression.type = left->member->expression.type;
+                    return true;
+                }
                 if (bi_operators.find(string(root->member->expression.op)) != bi_operators.end()) {
                     auto left = root->tree;
                     auto right = root->tree->next;
@@ -273,6 +387,11 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                         handle_logical_bi_ops(root, left, right);
                         return true;
                     }
+                }
+                if (un_operators.find(string(root->member->expression.op)) != un_operators.end()) {
+                    auto left = root->tree;
+                    handle_non_terminal_op(left, left->non_terminal);
+                    handle_logical_unary_ops(root, left);
                 }
             }
             return true;
@@ -297,5 +416,6 @@ void make_semantic(AstNode *root) {
     declaration_root = create_declaration(nullptr, root);
     check_variable_and_function_visibility(root, declaration_root);
     check_operation_types(root);
-    cout << declaration_root << endl;
+    subprogram_declarations.begin();
+    // cout << subprogram_declarations << endl;
 }

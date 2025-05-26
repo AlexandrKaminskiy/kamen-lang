@@ -127,15 +127,17 @@ std::string _print_expression(AstNode *root) {
     }
 
     if (root->member->expression.expression_type == NON_TERMINAL) {
-        std::string tree_part = _print_tree(root->member->expression.node, "", "");
+        std::string tree_part = " " + to_user_type(root->member->expression.type) + " " + _print_tree(root->member->expression.node, "", "");
         if (root->member->expression.op != nullptr) {
             return "OPERATION " + std::string(root->member->expression.op) + tree_part;
         }
     }
 
     if (root->member->expression.expression_type == VARIABLE) {
-        return "VARIABLE " + std::string(root->member->expression.identifier);
+        return " " + to_user_type(root->member->expression.type) + " " + "VARIABLE " + std::string(root->member->expression.identifier);
     }
+
+
 
     return "";
 }
@@ -217,6 +219,13 @@ AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
 }
 // 0x600002d00000
 // 0x600002300000 member
+AstNode *add_expression_invocation_node(AstNode *node) {
+    auto root = create_node(NT_EXPRESSION);
+    root->member->expression.node = node;
+    root->member->expression.expression_type = INVOCATION;
+    return root;
+}
+
 AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.integer = value;
@@ -259,6 +268,8 @@ AstNode *add_expression_node(const char* identifier) {
 AstNode *add_expression_node(AstNode* node) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.expression_type = NON_TERMINAL;
+    root->member->expression.op = nullptr;
+
     root->tree = node;
     return root;
 }

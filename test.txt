@@ -1,11 +1,10 @@
-procedure h()
+function h1(var i: Integer): Integer
 begin
-    var a: Boolean
-    var b: Double
-    var c: Boolean
+    return 1
+end
 
-    a := true && false
-
-    c := 1.1 + b = 0 = a
-
+procedure h(var i: Integer)
+begin
+    var h: Integer
+    h := h1(2)
 end

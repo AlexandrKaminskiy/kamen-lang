@@ -2,13 +2,16 @@
 #define TYPES_H
 #include <list>
 #include <set>
+#include <unordered_map>
 
 
 typedef struct AstNode AstNode;
 typedef struct Declaration Declaration;
 typedef struct DeclarationInfo DeclarationInfo;
 typedef struct ExpressionInfo ExpressionInfo;
-typedef union Member member;
+typedef struct SubprogramDeclaration SubprogramDeclaration;
+typedef union Member member;\
+
 
 /*
  * User type - can use anywhere
@@ -170,6 +173,14 @@ struct ExpressionInfo {
     ExpressionInfo *parent;
     std::list<ExpressionInfo *> children;
 };
+
+struct SubprogramDeclaration {
+    bool is_function;
+    std::list<UserType> variable_types;
+    UserType return_type;
+};
+
+inline std::unordered_map<std::string, SubprogramDeclaration *> subprogram_declarations;
 
 inline Declaration *declaration_root = nullptr;
 
