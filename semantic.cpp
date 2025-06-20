@@ -10,6 +10,19 @@ ExpressionInfo *create_expression_info() {
     return info;
 }
 
+DeclarationInfo *create_declaration_for_variable(const std::string &name, const int type) {
+    auto declaration_info = new DeclarationInfo();
+    declaration_info->identifier = name;
+
+    if (type < 5) {
+        declaration_info->user_type = static_cast<UserType>(type);
+    } else {
+        declaration_info->system_type = static_cast<SystemType>(type);
+    }
+
+    return declaration_info;
+}
+
 DeclarationInfo *create_declaration_info(const std::string &name, const UserType type) {
     auto declaration_info = new DeclarationInfo();
     declaration_info->identifier = name;
@@ -187,7 +200,7 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
                 cerr << "Variable was already declared " << var_name << endl;
                 return declaration;
             }
-            auto declaration_info = create_declaration_info(var_name, to_user_type(var_type)); // todo
+            auto declaration_info = create_declaration_for_variable(var_name, to_user_type(var_type)); // todo
 
             declaration->variable_declarations.push_back(declaration_info);
 
@@ -217,8 +230,8 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
 
             return create_declaration(declaration, root);
         }
-        case NT_PROGRAM:
-        case NT_BODY_LIST: {
+        case NT_PROGRAM: {
+        // case NT_BODY_LIST: {
             return create_declaration(declaration, root);
         }
 

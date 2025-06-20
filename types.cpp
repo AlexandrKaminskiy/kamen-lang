@@ -33,6 +33,27 @@ std::string to_user_type(UserType user_type) {
     }
 }
 
+int to_type(std::string string) {
+    if (string == "Integer") {
+        return TYPE_INTEGER;
+    }
+    if (string == "String") {
+        return TYPE_STRING;
+    }
+    if (string == "Double") {
+        return TYPE_DOUBLE;
+    }
+    if (string == "Boolean") {
+        return TYPE_BOOLEAN;
+    }
+    if (string == "Shape") {
+        return TYPE_SHAPE;
+    }
+    if (string == "Context") {
+        return TYPE_CONTEXT;
+    }
+}
+
 UserType to_user_type(std::string string) {
     if (string == "Integer") {
         return TYPE_INTEGER;

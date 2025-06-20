@@ -207,7 +207,6 @@ AstNode *add_variable_declaration_node(const std::string type, const std::string
     AstNode *root = create_node(NT_DECLARE_VARIABLE);
     const VariableDeclaration variable = {strdup(type.c_str()), strdup(name.c_str())};
     root->member->variable_declaration = variable;
-    cout << "adding declaration node " << name << endl;
     return root;
 }
 
@@ -216,7 +215,6 @@ AstNode *add_variable_assignation_node(const std::string name, AstNode *value) {
     const VariableAssignation variable = {strdup(name.c_str())};
     root->member->variable_assignation = variable;
     root->tree = value;
-    cout << "adding assignation node " << name << endl;
     return root;
 }
 // 0x600002d00000
@@ -254,7 +252,7 @@ AstNode *add_expression_node(const float value) {
 
 AstNode *add_expression_node(char* value, int stub) {
     auto root = create_node(NT_EXPRESSION);
-    root->member->expression.value.string = value;
+    root->member->expression.value.string = value;//todo fix
     root->member->expression.type = TYPE_STRING;
     root->member->expression.expression_type = TERMINAL;
     return root;

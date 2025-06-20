@@ -1,13 +1,5 @@
-function h1(var i: Integer): Integer
-begin
-    var a: Integer
-    b := 2
-    return 1.1
-end
-
 procedure h(var i: Integer)
 begin
-    var h: Integer
-    h := 2 + 1
-    h := h1(true)
+    var s: String
+    s := "123"
 end
