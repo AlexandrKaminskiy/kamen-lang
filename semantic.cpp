@@ -36,52 +36,6 @@ DeclarationInfo *create_declaration_info(const std::string &name) {
     return declaration_info;
 }
 
-DeclarationInfo *find_var(std::string identifier, std::list<DeclarationInfo *> declaration_infos) {
-    for (const auto declaration_info : declaration_infos) {
-        if (declaration_info->identifier == identifier) {
-            return declaration_info;
-        }
-    }
-    return nullptr;
-}
-
-bool in_correct_node(AstNode* root, AstNode* node_to_find) {
-    if (root == node_to_find) {
-        return true;
-    }
-    if (root->tree != nullptr) {
-        bool result = in_correct_node(root->tree, node_to_find);
-        if (result == true) {
-            return true;
-        }
-    }
-    while (root->next != nullptr) {
-        bool result = in_correct_node(root->next, node_to_find);
-        if (result == true) {
-            return true;
-        }
-        root = root->next;
-    }
-    return false;
-}
-
-DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, string name_to_find) {
-    auto declaration_info = find_var(name_to_find, current->variable_declarations);
-
-    if (declaration_info != nullptr && in_correct_node(current->node, node_to_find)) {
-        cout << "Declaration " << name_to_find << " found!" << endl;
-        return declaration_info;
-    }
-
-    for (Declaration *decl : current->children) {
-        DeclarationInfo* found_decl = find_declaration(decl, node_to_find, name_to_find);
-        if (found_decl != nullptr) {
-            return found_decl;
-        }
-    }
-    return nullptr;
-}
-
 Declaration *create_declaration(Declaration *parent, AstNode *node) {
     auto *root = new Declaration();
     root->node = node;
@@ -230,8 +184,8 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
 
             return create_declaration(declaration, root);
         }
+        case NT_BODY_LIST://todo why???
         case NT_PROGRAM: {
-        // case NT_BODY_LIST: {
             return create_declaration(declaration, root);
         }
 

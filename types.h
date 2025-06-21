@@ -44,6 +44,12 @@ std::string to_system_type(SystemType system_type);
 
 bool to_bool(char *string);
 
+DeclarationInfo *find_var(std::string identifier, std::list<DeclarationInfo *> declaration_infos);
+
+bool in_correct_node(AstNode* root, AstNode* node_to_find);
+
+DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, std::string name_to_find);
+
 typedef enum {
     NT_PROGRAM = 1,
     NT_SUBPROGRAMS,
@@ -165,6 +171,9 @@ struct DeclarationInfo {
     UserType user_type;
     SystemType system_type;
     std::string identifier;
+    int location_in_stack;
+    std::string reg;
+    bool is_register;
 };
 
 struct ExpressionInfo {

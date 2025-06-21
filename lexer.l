@@ -88,7 +88,7 @@ mod                                             { printf("OPERATOR mod : %s\n", 
     return STRING_LITERAL;
 }
 
-["][^"]*["]                                     { printf("STRING LITERAL: %s\n", yytext); return STRING_LITERAL;}
+["][^"]*["]                                     { printf("STRING LITERAL: %s\n", yytext); yylval.string = strdup(yytext); return STRING_LITERAL;}
 [0-9]+                                          { printf("INTEGER NUMBER: %s\n", yytext); yylval.num = atoi(yytext); return INTEGER_NUMBER;}
 [0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); yylval.frac = atof(yytext); return DOUBLE_NUMBER;}
 [a-zA-Z_][a-zA-Z_0-9]*                          { printf("IDENTIFIER: %s\n", yytext); yylval.string = strdup(yytext); return IDENTIFIER;}

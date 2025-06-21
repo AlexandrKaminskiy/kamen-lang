@@ -252,7 +252,7 @@ AstNode *add_expression_node(const float value) {
 
 AstNode *add_expression_node(char* value, int stub) {
     auto root = create_node(NT_EXPRESSION);
-    root->member->expression.value.string = value;//todo fix
+    root->member->expression.value.string = value;
     root->member->expression.type = TYPE_STRING;
     root->member->expression.expression_type = TERMINAL;
     return root;

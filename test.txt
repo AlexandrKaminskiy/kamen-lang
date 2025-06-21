@@ -1,20 +1,22 @@
-procedure h(var i: Integer)
+function h1(var i: Integer, var j: Double): Double
 begin
-    var s: String
-    s := "123"
+    var a: Integer
+    return 1.1
 end
 
 procedure main()
 begin
-    var a: Integer
-    var b: Integer
-    var c: Double
+    var a: String
 
-    a := 1
-    b := 2
-    c := 2.2
+    while(true)
+    begin
+        var g: Integer
+    end
+    var b: String
 
-    var d: Double
-
-    d := (a + b * c) / (-a)z
+    while(true)
+    begin
+        var g: Integer
+    end
+    var c: String
 end

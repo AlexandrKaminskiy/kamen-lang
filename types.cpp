@@ -96,3 +96,48 @@ bool to_bool(char* string) {
     }
     return false;
 }
+
+DeclarationInfo *find_var(std::string identifier, std::list<DeclarationInfo *> declaration_infos) {
+    for (const auto declaration_info : declaration_infos) {
+        if (declaration_info->identifier == identifier) {
+            return declaration_info;
+        }
+    }
+    return nullptr;
+}
+
+bool in_correct_node(AstNode* root, AstNode* node_to_find) {
+    if (root == node_to_find) {
+        return true;
+    }
+    if (root->tree != nullptr) {
+        bool result = in_correct_node(root->tree, node_to_find);
+        if (result == true) {
+            return true;
+        }
+    }
+    while (root->next != nullptr) {
+        bool result = in_correct_node(root->next, node_to_find);
+        if (result == true) {
+            return true;
+        }
+        root = root->next;
+    }
+    return false;
+}
+
+DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, std::string name_to_find) {
+    auto declaration_info = find_var(name_to_find, current->variable_declarations);
+
+    if (declaration_info != nullptr && in_correct_node(current->node, node_to_find)) {
+        return declaration_info;
+    }
+
+    for (Declaration *decl : current->children) {
+        DeclarationInfo* found_decl = find_declaration(decl, node_to_find, name_to_find);
+        if (found_decl != nullptr) {
+            return found_decl;
+        }
+    }
+    return nullptr;
+}
