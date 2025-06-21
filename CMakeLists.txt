@@ -31,6 +31,7 @@ add_executable(calc
         syntax.cpp
         semantic.cpp
         types.cpp
+        codegen.cpp
 )
 
 # Линковка с libfl

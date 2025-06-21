@@ -3,3 +3,18 @@ begin
     var s: String
     s := "123"
 end
+
+procedure main()
+begin
+    var a: Integer
+    var b: Integer
+    var c: Double
+
+    a := 1
+    b := 2
+    c := 2.2
+
+    var d: Double
+
+    d := (a + b * c) / (-a)z
+end

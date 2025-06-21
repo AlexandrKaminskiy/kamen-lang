@@ -433,10 +433,28 @@ void check_operation_types(AstNode *root) {
     }
 }
 
+void has_main() {
+    auto subprogram_declaration = subprogram_declarations["main"];
+    if (subprogram_declaration == nullptr) {
+        cerr << "Program doesnt contain an entrypoint" << endl;
+        return;
+    }
+
+    if (subprogram_declaration->is_function) {
+        cerr << "Entrypoint should be a procedure" << endl;
+        return;
+    }
+
+    if (!subprogram_declaration->variable_types.empty()) {
+        cerr << "Entrypoint shouldn't contain procedure params" << endl;
+    }
+}
+
 void make_semantic(AstNode *root) {
     declaration_root = create_declaration(nullptr, root);
     check_variable_and_function_visibility(root, declaration_root);
     check_operation_types(root);
-    subprogram_declarations.begin();
+    has_main();
+    // subprogram_declarations.begin();
     // cout << subprogram_declarations << endl;
 }
