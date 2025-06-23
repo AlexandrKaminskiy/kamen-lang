@@ -269,7 +269,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             if (subprogram_info->return_type != return_node->member->expression.type) {
                 cerr << "Incorrect return type. Expected: " << to_user_type(subprogram_info->return_type) << ". Given: " << to_user_type(return_node->member->expression.type) << endl;
             }
-            return true;
+            return false;
         }
         case NT_WHILE_LOOP: {
             auto condition_expression = root->tree;
