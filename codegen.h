@@ -26,6 +26,8 @@ inline std::string EXPRESSION_LISTING;
 
 inline const std::string POP_OP = "POP";
 inline const std::string MOV_OP = "MOV";
+inline const std::string MOVZX_OP = "MOVZX";
+inline const std::string CMP_OP = "CMP";
 inline const std::string PUSH_OP = "PUSH";
 inline const std::string ADD_OP = "ADD";
 inline const std::string SUB_OP = "SUB";
@@ -33,6 +35,21 @@ inline const std::string IMUL_OP = "IMUL";
 inline const std::string IDIV_OP = "IDIV";
 
 inline const std::string XOR_OP = "XOR";
+inline const std::string AND_OP = "AND";
+inline const std::string OR_OP = "OR";
+
+// mutate CF and ZF if above or below (unsigned + float)
+inline const std::string SETE_OP = "SETE";
+inline const std::string SETBE_OP = "SETBE";
+inline const std::string SETB_OP = "SETB";
+inline const std::string SETAE_OP = "SETAE";
+inline const std::string SETA_OP = "SETA";
+
+// mutate SF and ZF if greater or lower (signed)
+inline const std::string SETLE_OP = "SETLE";
+inline const std::string SETL_OP = "SETL";
+inline const std::string SETGE_OP = "SETGE";
+inline const std::string SETG_OP = "SETG";
 
 inline const std::string CQO_OP = "CQO"; // https://www.felixcloutier.com/x86/cwd:cdq:cqo CWD/CDQ/CQO — Convert Word to Doubleword/Convert Doubleword to Quadword
 
@@ -43,8 +60,12 @@ inline const std::string DIVSD_OP = "DIVSD";
 inline const std::string MOVSD_OP = "MOVSD";
 inline const std::string CVTSD2SI_OP = "CVTSD2SI"; // https://www.felixcloutier.com/x86/cvtsd2si Convert Scalar Double Precision Floating-Point Value to Doubleword Integer
 inline const std::string CVTSI2SD_OP = "CVTSI2SD"; // https://www.felixcloutier.com/x86/cvtsi2sd Convert Doubleword Integer to Scalar Double Precision Floating-Point Value
+inline const std::string UCOMISD_OP = "UCOMISD"; // https://c9x.me/x86/html/file_module_x86_id_316.html Unordered Compare Scalar Double-Precision Floating- Point Values and Set EFLAGS
 
+// 8 bit
+inline const std::string AL_REG = "AL";
 
+// 64 bit
 inline const std::string RAX_REG = "RAX";
 inline const std::string RBX_REG = "RBX";
 inline const std::string RDX_REG = "RDX";

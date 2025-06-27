@@ -91,9 +91,8 @@ SubprogramDeclaration *create_subprogram_declaration(bool is_function, AstNode *
     return subprogram;
 }
 
-Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, Declaration *declaration) {
+Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Declaration *declaration) {
     switch (non_terminal) {
-
         case NT_EXPRESSION: {
             if (root->member->expression.expression_type != VARIABLE) {
                 return declaration;
@@ -161,19 +160,21 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
             return declaration;
         }
         case NT_FUNCTION: {
-            auto declaration_info = create_declaration_info(root->member->function_declaration.name, root->member->function_declaration.return_type);
+            auto declaration_info = create_declaration_info(root->member->function_declaration.name,
+                                                            root->member->function_declaration.return_type);
 
             if (subprogram_declarations.count(root->member->function_declaration.name) > 0) {
                 cerr << "Subprogram was declared " << declaration_info->identifier << endl;
             }
-            auto subprogram_declaration = create_subprogram_declaration(true, root->member->function_declaration.return_type, root->tree->tree);
+            auto subprogram_declaration = create_subprogram_declaration(
+                true, root->member->function_declaration.return_type, root->tree->tree);
             subprogram_declarations[string(root->member->function_declaration.name)] = subprogram_declaration;
             declaration->subprogram_declarations.push_back(declaration_info);
 
             return create_declaration(declaration, root);
         }
         case NT_PROCEDURE: {
-            DeclarationInfo* declaration_info = create_declaration_info(root->member->function_declaration.name);
+            DeclarationInfo *declaration_info = create_declaration_info(root->member->function_declaration.name);
 
             if (subprogram_declarations.count(root->member->function_declaration.name) > 0) {
                 cerr << "Subprogram was declared " << declaration_info->identifier << endl;
@@ -184,7 +185,7 @@ Declaration * handle_var_or_function(AstNode *root, NonTerminal non_terminal, De
 
             return create_declaration(declaration, root);
         }
-        case NT_BODY_LIST://todo why???
+        case NT_BODY_LIST: //todo why???
         case NT_PROGRAM: {
             return create_declaration(declaration, root);
         }
@@ -208,7 +209,7 @@ void check_variable_and_function_visibility(AstNode *root, Declaration *declarat
     }
 }
 
-void handle_arith_ops(AstNode* root, AstNode *left, AstNode *right) {
+void handle_arith_ops(AstNode *root, AstNode *left, AstNode *right) {
     if (left->member->expression.type == TYPE_INTEGER && right->member->expression.type == TYPE_INTEGER) {
         root->member->expression.type = TYPE_INTEGER;
         return;
@@ -222,8 +223,17 @@ void handle_arith_ops(AstNode* root, AstNode *left, AstNode *right) {
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
 }
 
-void handle_comp_ops(AstNode* root, AstNode *left, AstNode *right) {
+void handle_comp_ops(AstNode *root, AstNode *left, AstNode *right) {
+    if ((left->member->expression.type == TYPE_DOUBLE || left->member->expression.type == TYPE_INTEGER) &&
+        (right->member->expression.type == TYPE_DOUBLE || right->member->expression.type == TYPE_INTEGER)) {
+        root->member->expression.type = TYPE_BOOLEAN;
+        return;
+    }
 
+    cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+}
+
+void handle_eq_ops(AstNode *root, AstNode *left, AstNode *right) {
     if ((left->member->expression.type == TYPE_DOUBLE || left->member->expression.type == TYPE_INTEGER) &&
         (right->member->expression.type == TYPE_DOUBLE || right->member->expression.type == TYPE_INTEGER)) {
         root->member->expression.type = TYPE_BOOLEAN;
@@ -238,8 +248,7 @@ void handle_comp_ops(AstNode* root, AstNode *left, AstNode *right) {
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
 }
 
-void handle_logical_bi_ops(AstNode* root, AstNode *left, AstNode *right) {
-
+void handle_logical_bi_ops(AstNode *root, AstNode *left, AstNode *right) {
     if (left->member->expression.type == TYPE_BOOLEAN || right->member->expression.type == TYPE_BOOLEAN) {
         root->member->expression.type = TYPE_BOOLEAN;
         return;
@@ -248,8 +257,7 @@ void handle_logical_bi_ops(AstNode* root, AstNode *left, AstNode *right) {
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
 }
 
-void handle_logical_unary_ops(AstNode* root, AstNode *left) {
-
+void handle_logical_unary_ops(AstNode *root, AstNode *left) {
     if (left->member->expression.type == TYPE_BOOLEAN) {
         root->member->expression.type = TYPE_BOOLEAN;
         return;
@@ -267,7 +275,8 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             auto return_node = root->tree->next->next;
             handle_non_terminal_op(return_node, return_node->non_terminal);
             if (subprogram_info->return_type != return_node->member->expression.type) {
-                cerr << "Incorrect return type. Expected: " << to_user_type(subprogram_info->return_type) << ". Given: " << to_user_type(return_node->member->expression.type) << endl;
+                cerr << "Incorrect return type. Expected: " << to_user_type(subprogram_info->return_type) << ". Given: "
+                        << to_user_type(return_node->member->expression.type) << endl;
             }
             return false;
         }
@@ -275,7 +284,8 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             auto condition_expression = root->tree;
             handle_non_terminal_op(condition_expression, condition_expression->non_terminal);
             if (condition_expression->member->expression.type != TYPE_BOOLEAN) {
-                cerr << "Incorrect type for while loop condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
+                cerr << "Incorrect type for while loop condition. Expected:  " << to_user_type(TYPE_BOOLEAN) <<
+                        ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
             }
             return true;
         }
@@ -283,7 +293,8 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             auto condition_expression = root->tree;
             handle_non_terminal_op(condition_expression, condition_expression->non_terminal);
             if (condition_expression->member->expression.type != TYPE_BOOLEAN) {
-                cerr << "Incorrect type for if condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
+                cerr << "Incorrect type for if condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " <<
+                        to_user_type(condition_expression->member->expression.type) << endl;
             }
             return true;
         }
@@ -317,13 +328,16 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             auto expression = root->tree;
             handle_non_terminal_op(expression, expression->non_terminal);
             if (expression->member->expression.type != declaration_info->user_type) {
-                cerr << "Incorrect type for variable assignation. Expected:  " << to_user_type(declaration_info->user_type) << ". Given: " << to_user_type(expression->member->expression.type) << endl;
+                cerr << "Incorrect type for variable assignation. Expected:  " <<
+                        to_user_type(declaration_info->user_type) << ". Given: " << to_user_type(
+                            expression->member->expression.type) << endl;
             }
             return true;
         }
         case NT_EXPRESSION: {
             if (root->member->expression.expression_type == VARIABLE) {
-                DeclarationInfo* declaration_info = find_declaration(declaration_root, root, root->member->expression.identifier);
+                DeclarationInfo *declaration_info = find_declaration(declaration_root, root,
+                                                                     root->member->expression.identifier);
                 auto var_type = declaration_info->user_type;
                 root->member->expression.type = var_type;
                 return true;
@@ -356,6 +370,10 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                     }
                     if (comp_operators.find(string(root->member->expression.op)) != comp_operators.end()) {
                         handle_comp_ops(root, left, right);
+                        return true;
+                    }
+                    if (eq_operators.find(string(root->member->expression.op)) != eq_operators.end()) {
+                        handle_eq_ops(root, left, right);
                         return true;
                     }
                     if (logic_bi_operators.find(string(root->member->expression.op)) != logic_bi_operators.end()) {

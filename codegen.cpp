@@ -14,6 +14,10 @@ std::string handle_constant(AstNode *root) {
 
     switch (root->member->expression.type) {
         case TYPE_DOUBLE: {
+            if (float_constant_map.count(root->member->expression.value.floating)) {
+                return "";
+            }
+
             const std::string constant_name = CONSTANT_NAME + std::to_string(constant_counter++);
 
             float_constant_map[root->member->expression.value.floating] = constant_name;
@@ -22,16 +26,23 @@ std::string handle_constant(AstNode *root) {
             return constant_name + DEFINE_QUAD + std::to_string(root->member->expression.value.floating) + "\n";
         }
         case TYPE_BOOLEAN: {
+            if (bool_constant_map.count(root->member->expression.value.boolean)) {
+                return "";
+            }
+
             const std::string constant_name = CONSTANT_NAME + std::to_string(constant_counter++);
 
             bool_constant_map[root->member->expression.value.boolean] = constant_name;
 
             std::string result = root->member->expression.value.boolean ? "1" : "0" ;
 
-            return constant_name + DEFINE_BYTE + result + "\n";
+            return constant_name + DEFINE_QUAD + result + "\n";
         }
 
         case TYPE_STRING: {
+            if (string_constant_map.count(root->member->expression.value.string)) {
+                return "";
+            }
             const std::string constant_name = CONSTANT_NAME + std::to_string(constant_counter++);
 
             string_constant_map[root->member->expression.value.string] = constant_name;
@@ -305,6 +316,125 @@ void handle_arith_ops(AstNode *current, std::string op) {
     }
 }
 
+void handle_logic_bi_ops(AstNode *current, std::string op) {
+    switch (current->member->expression.type) {
+        case TYPE_BOOLEAN: {
+            if (op == "&&") {
+                auto right = perform_pop(RBX_REG);
+                auto left = perform_pop(RAX_REG);
+                auto operation = two_operands_operation(AND_OP, RAX_REG, RBX_REG);
+                auto result = perform_push(RAX_REG);
+                EXPRESSION_LISTING += (right + left + operation + result);
+                break;
+            }
+            if (op == "||") {
+                auto right = perform_pop(RBX_REG);
+                auto left = perform_pop(RAX_REG);
+                auto operation = two_operands_operation(OR_OP, RAX_REG, RBX_REG);
+                auto result = perform_push(RAX_REG);
+                EXPRESSION_LISTING += (right + left + operation + result);
+                break;
+            }
+        }
+        default: break;
+    }
+
+}
+
+void handle_un_ops(AstNode * current, char * op) {
+    switch (current->member->expression.type) {
+        case TYPE_BOOLEAN: {
+            if (std::strcmp(op, "!") == 0) {
+                auto left = perform_pop(RAX_REG);
+                auto operation = two_operands_operation(XOR_OP, RAX_REG, "0x1");
+                auto result = perform_push(RAX_REG);
+                EXPRESSION_LISTING += (left + operation + result);
+                break;
+            }
+        }
+        default: break;
+    }
+}
+
+void handle_comp_operators(AstNode * current, std::string op) {
+    bool left_int = current->tree->member->expression.type == TYPE_INTEGER;
+    bool right_int = current->tree->next->member->expression.type == TYPE_INTEGER;
+
+    if (left_int && right_int) {
+        std::string set_result;
+        if (op == ">=") {
+            set_result = one_operands_operation(SETGE_OP, AL_REG);
+        }
+        if (op == "<=") {
+            set_result = one_operands_operation(SETLE_OP, AL_REG);
+        }
+        if (op == "<") {
+            set_result = one_operands_operation(SETG_OP, AL_REG);
+        }
+        if (op == ">") {
+            set_result = one_operands_operation(SETL_OP, AL_REG);
+        }
+        auto right = perform_pop(RBX_REG);
+        auto left = perform_pop(RAX_REG);
+        auto operation = two_operands_operation(CMP_OP, RAX_REG, RBX_REG);
+        auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
+        auto result = perform_push(RAX_REG);
+        EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+    } else {
+        std::string set_result;
+        if (op == ">=") {
+            set_result = one_operands_operation(SETAE_OP, AL_REG);
+        }
+
+        if (op == "<=") {
+            set_result = one_operands_operation(SETBE_OP, AL_REG);
+        }
+
+        if (op == ">") {
+            set_result = one_operands_operation(SETA_OP, AL_REG);
+        }
+
+        if (op == "<") {
+            set_result = one_operands_operation(SETB_OP, AL_REG);
+        }
+        auto right = handle_pop_with_float_in_expression(right_int, XMM1_REG);
+        auto left = handle_pop_with_float_in_expression(left_int, XMM0_REG);
+        auto operation = two_operands_operation(UCOMISD_OP, XMM0_REG, XMM1_REG);
+        auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
+        auto result = perform_push(RAX_REG);
+        EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+    }
+}
+
+void handle_eq_operators(AstNode * current, std::string op) {
+    bool left_double = current->tree->member->expression.type == TYPE_DOUBLE;
+    bool right_double = current->tree->next->member->expression.type == TYPE_DOUBLE;
+
+    if (left_double || right_double) {
+        bool left_int = current->tree->member->expression.type == TYPE_INTEGER;
+        bool right_int = current->tree->next->member->expression.type == TYPE_INTEGER;
+        if (op == "=") {
+            auto right = handle_pop_with_float_in_expression(right_int, XMM1_REG);
+            auto left = handle_pop_with_float_in_expression(left_int, XMM0_REG);
+            auto operation = two_operands_operation(UCOMISD_OP, XMM0_REG, XMM1_REG);
+            auto set_result = one_operands_operation(SETE_OP, AL_REG);
+            auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
+            auto result = perform_push(RAX_REG);
+            EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+        }
+    } else {
+        if (op == "=") {
+            auto right = perform_pop(RBX_REG);
+            auto left = perform_pop(RAX_REG);
+            auto operation = two_operands_operation(CMP_OP, RAX_REG, RBX_REG);
+            auto set_result = one_operands_operation(SETE_OP, AL_REG);
+            auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
+            auto result = perform_push(RAX_REG);
+            EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+        }
+    }
+}
+
 void handle_expression(AstNode *node, std::string current_string) {
     AstNode *current = node;
 
@@ -335,15 +465,17 @@ void handle_expression(AstNode *node, std::string current_string) {
                 handle_arith_ops(current, current->member->expression.op);
             }
             if (comp_operators.find(std::string(current->member->expression.op)) != comp_operators.end()) {
-
+                handle_comp_operators(current, current->member->expression.op);
+            }
+            if (eq_operators.find(std::string(current->member->expression.op)) != eq_operators.end()) {
+                handle_eq_operators(current, current->member->expression.op);
             }
             if (logic_bi_operators.find(std::string(current->member->expression.op)) != logic_bi_operators.end()) {
+                handle_logic_bi_ops(current, current->member->expression.op);
             }
         }
         if (un_operators.find(std::string(current->member->expression.op)) != un_operators.end()) {
-            // auto left = root->tree;
-            // handle_non_terminal_op(left, left->non_terminal);
-            // handle_logical_unary_ops(root, left);
+            handle_un_ops(current, current->member->expression.op);
         }
     }
 

@@ -195,7 +195,8 @@ inline Declaration *declaration_root = nullptr;
 
 inline std::set<std::string> bi_operators{"+", "-", "*", "/", "mod", ">", "<", ">=", "<=", "=", "&&", "||"};
 inline std::set<std::string> arith_operators{"+", "-", "*", "/", "mod"};
-inline std::set<std::string> comp_operators{">", "<", ">=", "<=", "="};
+inline std::set<std::string> comp_operators{">", "<", ">=", "<="};
+inline std::set<std::string> eq_operators{"="};
 inline std::set<std::string> logic_bi_operators{"&&", "||"};
 inline std::set<std::string> logic_un_operators{"!"};
 inline std::set<std::string> un_operators{"!"};

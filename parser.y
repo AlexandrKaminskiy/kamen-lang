@@ -78,15 +78,15 @@ void yyerror(char *);
 %token <string> MULT
 %token <string> DIV
 
-%left OR
-%left AND
-%left NOT
-
 %left EQUALS
 %left BIGGER_OR_EQUALS
 %left LESS_OR_EQUALS
 %left BIGGER
 %left LESS
+
+%left OR
+%left AND
+%left NOT
 
 %left PLUS
 %left MINUS
