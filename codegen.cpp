@@ -6,7 +6,7 @@
 
 std::string handle_constant(AstNode *root) {
     if (root->non_terminal != NT_EXPRESSION) {
-        return"";
+        return "";
     }
     if (root->member->expression.expression_type != TERMINAL) {
         return "";
@@ -34,7 +34,7 @@ std::string handle_constant(AstNode *root) {
 
             bool_constant_map[root->member->expression.value.boolean] = constant_name;
 
-            std::string result = root->member->expression.value.boolean ? "1" : "0" ;
+            std::string result = root->member->expression.value.boolean ? "1" : "0";
 
             return constant_name + DEFINE_QUAD + result + "\n";
         }
@@ -71,21 +71,21 @@ void define_location_in_program_for_variable_declarations_in_subprogram(Declarat
         return;
     }
 
-    for (const auto declaration_info : root->variable_declarations) {
+    for (const auto declaration_info: root->variable_declarations) {
         declaration_info->is_register = false;
         declaration_info->location_in_stack = shift;
         shift += STACK_BIT_DEPTH;
     }
 
-    for (const auto child_declarations : root->children) {
+    for (const auto child_declarations: root->children) {
         define_location_in_program_for_variable_declarations_in_subprogram(child_declarations, shift);
     }
 }
 
-void define_location_in_program_for_variable_declarations_in_prolog(const std::list<DeclarationInfo *>& variables) {
+void define_location_in_program_for_variable_declarations_in_prolog(const std::list<DeclarationInfo *> &variables) {
     int number_int = 0;
     int number_frac = 0;
-    for (const auto declaration_info : variables) {
+    for (const auto declaration_info: variables) {
         switch (declaration_info->user_type) {
             case TYPE_DOUBLE: {
                 declaration_info->is_register = true;
@@ -119,7 +119,7 @@ void define_location_in_program_for_variable_declarations(Declaration *root) {
 
     switch (root->node->non_terminal) {
         case NT_PROGRAM: {
-            for (const auto child_declaration : root->children) {
+            for (const auto child_declaration: root->children) {
                 define_location_in_program_for_variable_declarations(child_declaration);
             }
             break;
@@ -127,7 +127,7 @@ void define_location_in_program_for_variable_declarations(Declaration *root) {
         case NT_PROCEDURE:
         case NT_FUNCTION: {
             define_location_in_program_for_variable_declarations_in_prolog(root->variable_declarations);
-            for (const auto child_declaration : root->children) {
+            for (const auto child_declaration: root->children) {
                 define_location_in_program_for_variable_declarations_in_subprogram(child_declaration, STACK_BIT_DEPTH);
             }
             break;
@@ -196,13 +196,18 @@ std::string perform_push_for_float(std::string value) {
 std::string handle_expression_terminal(AstNode *current) {
     switch (current->member->expression.type) {
         case TYPE_DOUBLE: {
-            return perform_push(to_location_in_data_segment(float_constant_map[current->member->expression.value.floating]),QWORD_SIZE);
+            return perform_push(
+                to_location_in_data_segment(float_constant_map[current->member->expression.value.floating]),
+                QWORD_SIZE);
         }
         case TYPE_BOOLEAN: {
-            return perform_push(to_location_in_data_segment(bool_constant_map[current->member->expression.value.boolean]),QWORD_SIZE);
+            return perform_push(
+                to_location_in_data_segment(bool_constant_map[current->member->expression.value.boolean]), QWORD_SIZE);
         }
         case TYPE_STRING: {
-            return perform_push(to_location_in_data_segment(string_constant_map[current->member->expression.value.string]),QWORD_SIZE); // todo QWORD???
+            return perform_push(
+                to_location_in_data_segment(string_constant_map[current->member->expression.value.string]),
+                QWORD_SIZE); // todo QWORD???
         }
         case TYPE_INTEGER: {
             return perform_push(std::to_string(current->member->expression.value.integer));
@@ -221,7 +226,7 @@ std::string handle_pop_with_float_in_expression(bool is_int, std::string reg) {
     }
 }
 
-void handle_arith_ops(AstNode *current, std::string op) {
+std::string handle_arith_ops(AstNode *current, std::string op) {
     switch (current->member->expression.type) {
         case TYPE_INTEGER: {
             if (op == "+") {
@@ -229,24 +234,21 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto left = perform_pop(RAX_REG);
                 auto operation = two_operands_operation(ADD_OP, RAX_REG, RBX_REG);
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (right + left + operation + result);
-                break;
+                return (right + left + operation + result);
             }
             if (op == "-") {
                 auto right = perform_pop(RBX_REG);
                 auto left = perform_pop(RAX_REG);
                 auto operation = two_operands_operation(SUB_OP, RAX_REG, RBX_REG);
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (right + left + operation + result);
-                break;
+                return (right + left + operation + result);
             }
             if (op == "*") {
                 auto right = perform_pop(RBX_REG);
                 auto left = perform_pop(RAX_REG);
                 auto operation = two_operands_operation(IMUL_OP, RAX_REG, RBX_REG);
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (right + left + operation + result);
-                break;
+                return (right + left + operation + result);
             }
             if (op == "/") {
                 auto right = perform_pop(RBX_REG);
@@ -255,8 +257,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto cqo = no_operands_operation(CQO_OP);
                 auto operation = one_operands_operation(IDIV_OP, RBX_REG);
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (right + left + zero_rdx + cqo + operation + result);
-                break;
+                return (right + left + zero_rdx + cqo + operation + result);
             }
             if (op == "mod") {
                 auto right = perform_pop(RBX_REG);
@@ -265,8 +266,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto cqo = no_operands_operation(CQO_OP);
                 auto operation = one_operands_operation(IDIV_OP, RAX_REG);
                 auto result = perform_push(RDX_REG);
-                EXPRESSION_LISTING += (right + left + zero_rdx + cqo + operation + result);
-                break;
+                return (right + left + zero_rdx + cqo + operation + result);
             }
             break;
         }
@@ -280,8 +280,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto operation = two_operands_operation(ADDSD_OP, XMM0_REG, XMM1_REG);
                 auto result = perform_push_for_float(XMM0_REG);
                 auto debug_check = debug_comment(two_operands_operation(CVTSD2SI_OP, RAX_REG, XMM0_REG));
-                EXPRESSION_LISTING += (right + left + operation + result + debug_check);
-                break;
+                return (right + left + operation + result + debug_check);
             }
             if (op == "-") {
                 auto right = handle_pop_with_float_in_expression(right_int, XMM1_REG);
@@ -289,8 +288,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto operation = two_operands_operation(SUBSD_OP, XMM0_REG, XMM1_REG);
                 auto result = perform_push_for_float(XMM0_REG);
                 auto debug_check = debug_comment(two_operands_operation(CVTSD2SI_OP, RAX_REG, XMM0_REG));
-                EXPRESSION_LISTING += (right + left + operation + result + debug_check);
-                break;
+                return (right + left + operation + result + debug_check);
             }
             if (op == "*") {
                 auto right = handle_pop_with_float_in_expression(right_int, XMM1_REG);
@@ -298,8 +296,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto operation = two_operands_operation(MULSD_OP, XMM0_REG, XMM1_REG);
                 auto result = perform_push_for_float(XMM0_REG);
                 auto debug_check = debug_comment(two_operands_operation(CVTSD2SI_OP, RAX_REG, XMM0_REG));
-                EXPRESSION_LISTING += (right + left + operation + result + debug_check);
-                break;
+                return (right + left + operation + result + debug_check);
             }
             if (op == "/") {
                 auto right = handle_pop_with_float_in_expression(right_int, XMM1_REG);
@@ -307,8 +304,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
                 auto operation = two_operands_operation(DIVSD_OP, XMM0_REG, XMM1_REG);
                 auto result = perform_push_for_float(XMM0_REG);
                 auto debug_check = debug_comment(two_operands_operation(CVTSD2SI_OP, RAX_REG, XMM0_REG));
-                EXPRESSION_LISTING += (right + left + operation + result + debug_check);
-                break;
+                return (right + left + operation + result + debug_check);
             }
             break;
         }
@@ -316,7 +312,7 @@ void handle_arith_ops(AstNode *current, std::string op) {
     }
 }
 
-void handle_logic_bi_ops(AstNode *current, std::string op) {
+std::string handle_logic_bi_ops(AstNode *current, std::string op) {
     switch (current->member->expression.type) {
         case TYPE_BOOLEAN: {
             if (op == "&&") {
@@ -324,39 +320,35 @@ void handle_logic_bi_ops(AstNode *current, std::string op) {
                 auto left = perform_pop(RAX_REG);
                 auto operation = two_operands_operation(AND_OP, RAX_REG, RBX_REG);
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (right + left + operation + result);
-                break;
+                return (right + left + operation + result);
             }
             if (op == "||") {
                 auto right = perform_pop(RBX_REG);
                 auto left = perform_pop(RAX_REG);
                 auto operation = two_operands_operation(OR_OP, RAX_REG, RBX_REG);
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (right + left + operation + result);
-                break;
+                return (right + left + operation + result);
             }
         }
         default: break;
     }
-
 }
 
-void handle_un_ops(AstNode * current, char * op) {
+std::string handle_un_ops(AstNode *current, char *op) {
     switch (current->member->expression.type) {
         case TYPE_BOOLEAN: {
             if (std::strcmp(op, "!") == 0) {
                 auto left = perform_pop(RAX_REG);
                 auto operation = two_operands_operation(XOR_OP, RAX_REG, "0x1");
                 auto result = perform_push(RAX_REG);
-                EXPRESSION_LISTING += (left + operation + result);
-                break;
+                return (left + operation + result);
             }
         }
         default: break;
     }
 }
 
-void handle_comp_operators(AstNode * current, std::string op) {
+std::string handle_comp_operators(AstNode *current, std::string op) {
     bool left_int = current->tree->member->expression.type == TYPE_INTEGER;
     bool right_int = current->tree->next->member->expression.type == TYPE_INTEGER;
 
@@ -379,7 +371,7 @@ void handle_comp_operators(AstNode * current, std::string op) {
         auto operation = two_operands_operation(CMP_OP, RAX_REG, RBX_REG);
         auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
         auto result = perform_push(RAX_REG);
-        EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+        return (right + left + operation + set_result + extend + result);
     } else {
         std::string set_result;
         if (op == ">=") {
@@ -402,11 +394,11 @@ void handle_comp_operators(AstNode * current, std::string op) {
         auto operation = two_operands_operation(UCOMISD_OP, XMM0_REG, XMM1_REG);
         auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
         auto result = perform_push(RAX_REG);
-        EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+        return (right + left + operation + set_result + extend + result);
     }
 }
 
-void handle_eq_operators(AstNode * current, std::string op) {
+std::string handle_eq_operators(AstNode *current, std::string op) {
     bool left_double = current->tree->member->expression.type == TYPE_DOUBLE;
     bool right_double = current->tree->next->member->expression.type == TYPE_DOUBLE;
 
@@ -420,7 +412,7 @@ void handle_eq_operators(AstNode * current, std::string op) {
             auto set_result = one_operands_operation(SETE_OP, AL_REG);
             auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
             auto result = perform_push(RAX_REG);
-            EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+            return (right + left + operation + set_result + extend + result);
         }
     } else {
         if (op == "=") {
@@ -430,30 +422,31 @@ void handle_eq_operators(AstNode * current, std::string op) {
             auto set_result = one_operands_operation(SETE_OP, AL_REG);
             auto extend = two_operands_operation(MOVZX_OP, RAX_REG, AL_REG);
             auto result = perform_push(RAX_REG);
-            EXPRESSION_LISTING += (right + left + operation + set_result + extend + result);
+            return (right + left + operation + set_result + extend + result);
         }
     }
 }
 
-void handle_expression(AstNode *node, std::string current_string) {
+std::string handle_expression(AstNode *node) {
+    std::string result;
     AstNode *current = node;
 
     if (current->tree != nullptr) {
-        handle_expression(current->tree, "");
+        result += handle_expression(current->tree);
     }
 
     if (current->member->expression.op == nullptr) {
         switch (current->member->expression.expression_type) {
             case TERMINAL: {
-                EXPRESSION_LISTING += handle_expression_terminal(current);
+                result += handle_expression_terminal(current);
                 break;
             }
             case VARIABLE: {
                 auto declaration_info = find_declaration(declaration_root, node, current->member->expression.identifier);
                 if (declaration_info->is_register) {
-                    EXPRESSION_LISTING += perform_push(declaration_info->reg);
+                    result += perform_push(declaration_info->reg);
                 } else {
-                    EXPRESSION_LISTING += perform_push(to_location_in_stack(declaration_info->location_in_stack));
+                    result += perform_push(to_location_in_stack(declaration_info->location_in_stack));
                 }
                 break;
             }
@@ -462,34 +455,36 @@ void handle_expression(AstNode *node, std::string current_string) {
     } else {
         if (bi_operators.find(std::string(current->member->expression.op)) != bi_operators.end()) {
             if (arith_operators.find(std::string(current->member->expression.op)) != arith_operators.end()) {
-                handle_arith_ops(current, current->member->expression.op);
+                result += handle_arith_ops(current, current->member->expression.op);
             }
             if (comp_operators.find(std::string(current->member->expression.op)) != comp_operators.end()) {
-                handle_comp_operators(current, current->member->expression.op);
+                result += handle_comp_operators(current, current->member->expression.op);
             }
             if (eq_operators.find(std::string(current->member->expression.op)) != eq_operators.end()) {
-                handle_eq_operators(current, current->member->expression.op);
+                result += handle_eq_operators(current, current->member->expression.op);
             }
             if (logic_bi_operators.find(std::string(current->member->expression.op)) != logic_bi_operators.end()) {
-                handle_logic_bi_ops(current, current->member->expression.op);
+                result += handle_logic_bi_ops(current, current->member->expression.op);
             }
         }
         if (un_operators.find(std::string(current->member->expression.op)) != un_operators.end()) {
-            handle_un_ops(current, current->member->expression.op);
+            result += handle_un_ops(current, current->member->expression.op);
         }
     }
 
     if (current->next != nullptr) {
-        handle_expression(current->next, "");
+        result += handle_expression(current->next);
     }
+
+    return result;
 }
 
-bool handle_non_terminal_operation(AstNode * node, NonTerminal non_terminal) {
+bool handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal) {
     if (non_terminal != NT_EXPRESSION) {
         return false;
     }
 
-    handle_expression(node, "");
+    EXPRESSION_LISTING += handle_expression(node);
     return true;
 }
 
