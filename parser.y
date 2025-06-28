@@ -78,21 +78,15 @@ void yyerror(char *);
 %token <string> MULT
 %token <string> DIV
 
-%left EQUALS
-%left BIGGER_OR_EQUALS
-%left LESS_OR_EQUALS
-%left BIGGER
-%left LESS
 
 %left OR
 %left AND
 %left NOT
 
-%left PLUS
-%left MINUS
-%left MOD
-%left MULT
-%left DIV
+%left EQUALS BIGGER_OR_EQUALS LESS_OR_EQUALS BIGGER LESS
+
+%left PLUS MINUS
+%left MOD MULT DIV
 
 %nonassoc IF
 %nonassoc ELSE
@@ -144,7 +138,7 @@ procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_B
 
 
 subprog_params: { $$ = create_node(NT_SUBPROG_PARAMS); }
-      | declare_variable COMMA subprog_params {  $$ = add_equal_node($3, $1); }
+      | subprog_params COMMA declare_variable {  $$ = add_equal_node($1, $3); }
       | declare_variable { $$ = create_nodes(NT_SUBPROG_PARAMS, {$1}); }
       ;
 

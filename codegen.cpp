@@ -199,7 +199,7 @@ std::string to_location_in_register(std::string reg) {
 }
 
 std::string create_label(std::string label) {
-    return "_" + label + ":\n";
+    return "_" + label;
 }
 
 std::string perform_pop_for_float(std::string into) {
@@ -228,7 +228,7 @@ std::string handle_invocation(AstNode *node) {
     std::string params_set;
 
     while (param != nullptr) {
-        params_set += handle_expression(param);
+        params_set += handle_expression(param, false);
         auto expr_type = param->member->expression.type;
         if (expr_type == TYPE_DOUBLE) {
             params_set += perform_pop_for_float(register_frac_list[float_params]);
@@ -489,12 +489,12 @@ std::string handle_eq_operators(AstNode *current, std::string op) {
     }
 }
 
-std::string handle_expression(AstNode *node) {
+std::string handle_expression(AstNode *node, bool handle_next) {
     std::string result;
     AstNode *current = node;
 
     if (current->tree != nullptr) {
-        result += handle_expression(current->tree);
+        result += handle_expression(current->tree, true);
     }
 
     if (current->member->expression.op == nullptr) {
@@ -513,7 +513,10 @@ std::string handle_expression(AstNode *node) {
                 }
                 break;
             }
-            case INVOCATION: break; //todo
+            case INVOCATION: {
+
+                break; //todo
+            }
         }
     } else {
         if (bi_operators.find(std::string(current->member->expression.op)) != bi_operators.end()) {
@@ -535,8 +538,8 @@ std::string handle_expression(AstNode *node) {
         }
     }
 
-    if (current->next != nullptr) {
-        result += handle_expression(current->next);
+    if (current->next != nullptr && handle_next) {
+        result += handle_expression(current->next, true);
     }
 
     return result;
@@ -567,7 +570,7 @@ std::string handle_return_expression(AstNode *node) {
     } else {
         save_result_expression = perform_pop(RAX_REG);
     }
-    auto return_expr = handle_expression(node);
+    auto return_expr = handle_expression(node, true);
 
     return return_expr + save_result_expression;
 }
@@ -591,9 +594,11 @@ std::string handle_subprogram(AstNode *node, bool is_procedure) {
     if (is_procedure) {
         subprog_label = create_label(node->member->procedure_declaration.name);
         subprog_label_map[node->member->procedure_declaration.name] = subprog_label;
+        subprog_label += ":\n";
     } else {
         subprog_label = create_label(node->member->function_declaration.name);
         subprog_label_map[node->member->function_declaration.name] = subprog_label;
+        subprog_label += ":\n";
     }
 
     auto save_base_ptr = perform_push(RBP_REG);
@@ -636,7 +641,7 @@ std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_termina
         }
         case NT_EXPRESSION: {
             *handled = true;
-            return handle_expression(node);
+            return handle_expression(node, true);
         }
         case NT_INVOCATION: {
             *handled = true;

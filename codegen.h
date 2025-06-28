@@ -105,7 +105,7 @@ const std::array<std::string, 8> register_frac_list = {
     "XMM7"
 };
 
-std::string handle_expression(AstNode *node);
+std::string handle_expression(AstNode *node, bool handle_next);
 std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal, bool* handled);
 std::string create_constants(AstNode *root);
 std::string handle_operations(AstNode *root);

@@ -185,7 +185,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             return create_declaration(declaration, root);
         }
-        case NT_BODY_LIST: //todo why???
+        case NT_BODY_LIST:
         case NT_PROGRAM: {
             return create_declaration(declaration, root);
         }
@@ -193,6 +193,10 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
         default: return declaration;
     }
+}
+
+bool check_function_and_return_stmt(AstNode *node) {
+    return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_EXPRESSION;
 }
 
 void check_variable_and_function_visibility(AstNode *root, Declaration *declaration) {
@@ -204,6 +208,9 @@ void check_variable_and_function_visibility(AstNode *root, Declaration *declarat
         }
         if (node->tree != nullptr) {
             check_variable_and_function_visibility(node->tree, created_declaration);
+        }
+        if (check_function_and_return_stmt(node)) {
+            break;
         }
         node = node->next;
     }
