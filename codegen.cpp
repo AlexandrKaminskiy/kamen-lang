@@ -66,20 +66,29 @@ std::string create_constants(AstNode *root) {
     return declarations;
 }
 
-void define_location_in_program_for_variable_declarations_in_subprogram(Declaration *root, int shift) {
+int define_location_in_program_for_variable_declarations_in_subprogram(Declaration *root, int shift) {
     if (root == nullptr) {
-        return;
+        return 0;
     }
 
+    int max_stack_depth = 0;
     for (const auto declaration_info: root->variable_declarations) {
         declaration_info->is_register = false;
         declaration_info->location_in_stack = shift;
         shift += STACK_BIT_DEPTH;
     }
 
+    max_stack_depth += shift;
+
+    int max_depth_in_child = 0;
     for (const auto child_declarations: root->children) {
-        define_location_in_program_for_variable_declarations_in_subprogram(child_declarations, shift);
+        int depth = define_location_in_program_for_variable_declarations_in_subprogram(child_declarations, shift);
+        if (depth > max_depth_in_child) {
+            max_depth_in_child = depth;
+        }
     }
+    max_stack_depth += max_depth_in_child;
+    return max_stack_depth;
 }
 
 void define_location_in_program_for_variable_declarations_in_prolog(const std::list<DeclarationInfo *> &variables) {
@@ -127,9 +136,15 @@ void define_location_in_program_for_variable_declarations(Declaration *root) {
         case NT_PROCEDURE:
         case NT_FUNCTION: {
             define_location_in_program_for_variable_declarations_in_prolog(root->variable_declarations);
+            int max_depth = 0;
             for (const auto child_declaration: root->children) {
-                define_location_in_program_for_variable_declarations_in_subprogram(child_declaration, STACK_BIT_DEPTH);
+                int depth = define_location_in_program_for_variable_declarations_in_subprogram(
+                    child_declaration, STACK_BIT_DEPTH);
+                if (depth > max_depth) {
+                    max_depth = depth;
+                }
             }
+            root->max_stack_depth = max_depth;
             break;
         }
         default: return;
@@ -157,19 +172,22 @@ std::string zero_register(std::string reg) {
 }
 
 std::string perform_pop(std::string into) {
+    stack_shift += STACK_BIT_DEPTH;
     return one_operands_operation(POP_OP, into);
 }
 
 std::string perform_push(std::string value, std::string size) {
+    stack_shift -= STACK_BIT_DEPTH;
     return PUSH_OP + " " + size + " " + value + "\n";
 }
 
 std::string perform_push(std::string value) {
+    stack_shift -= STACK_BIT_DEPTH;
     return one_operands_operation(PUSH_OP, value);
 }
 
 std::string to_location_in_stack(int location) {
-    return "[rel BP + " + std::to_string(location) + "]\n";
+    return "[" + RBP_REG + " - (" + std::to_string(location) + ")]"; //todo rewrite if more than 6 params
 }
 
 std::string to_location_in_data_segment(std::string label) {
@@ -180,18 +198,62 @@ std::string to_location_in_register(std::string reg) {
     return "[" + reg + "]";
 }
 
+std::string create_label(std::string label) {
+    return "_" + label + ":\n";
+}
+
 std::string perform_pop_for_float(std::string into) {
+    stack_shift += STACK_BIT_DEPTH;
     auto load = two_operands_operation(MOVSD_OP, into, to_location_in_register(RSP_REG));
     auto add_sp = two_operands_operation(ADD_OP, RSP_REG, std::to_string(STACK_BIT_DEPTH));
     return load + add_sp;
 }
 
 std::string perform_push_for_float(std::string value) {
+    stack_shift -= STACK_BIT_DEPTH;
     auto sub_sp = two_operands_operation(SUB_OP, RSP_REG, std::to_string(STACK_BIT_DEPTH));
     auto load = two_operands_operation(MOVSD_OP, to_location_in_register(RSP_REG), value);
     return sub_sp + load;
 }
 
+std::string handle_invocation(AstNode *node) {
+    auto subprog_label = subprog_label_map[std::string(node->member->invocation.identifier)];
+    auto param = node->tree->tree;
+
+    int float_params = 0;
+    int int_params = 0;
+
+    std::string stack_align;
+    std::string stack_revert;
+    std::string params_set;
+
+    while (param != nullptr) {
+        params_set += handle_expression(param);
+        auto expr_type = param->member->expression.type;
+        if (expr_type == TYPE_DOUBLE) {
+            params_set += perform_pop_for_float(register_frac_list[float_params]);
+            float_params++;
+        } else {
+            params_set += perform_pop(register_int_list[int_params]);
+            int_params++;
+        }
+        param = param->next;
+    }
+
+    bool is_stack_aligned = stack_shift % (STACK_BIT_DEPTH * 2) == 0; // 16 byte align
+
+    if (!is_stack_aligned) {
+        stack_align += two_operands_operation(SUB_OP, RSP_REG, std::to_string(STACK_BIT_DEPTH));
+    }
+
+    auto invocation = one_operands_operation(CALL_OP, subprog_label);
+
+    if (!is_stack_aligned) {
+        stack_revert += two_operands_operation(ADD_OP, RSP_REG, std::to_string(STACK_BIT_DEPTH));
+    }
+
+    return params_set + stack_align + invocation + stack_revert;
+}
 
 std::string handle_expression_terminal(AstNode *current) {
     switch (current->member->expression.type) {
@@ -442,11 +504,12 @@ std::string handle_expression(AstNode *node) {
                 break;
             }
             case VARIABLE: {
-                auto declaration_info = find_declaration(declaration_root, node, current->member->expression.identifier);
+                auto declaration_info =
+                        find_declaration(declaration_root, node, current->member->expression.identifier);
                 if (declaration_info->is_register) {
                     result += perform_push(declaration_info->reg);
                 } else {
-                    result += perform_push(to_location_in_stack(declaration_info->location_in_stack));
+                    result += perform_push(to_location_in_stack(declaration_info->location_in_stack), QWORD_SIZE);
                 }
                 break;
             }
@@ -479,25 +542,126 @@ std::string handle_expression(AstNode *node) {
     return result;
 }
 
-bool handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal) {
-    if (non_terminal != NT_EXPRESSION) {
-        return false;
-    }
+std::string handle_assign_variable(AstNode *node) {
+    auto declaration_info = find_declaration(declaration_root, node, node->member->variable_assignation.name);
+    auto expression = node->tree;
+    bool handled;
+    auto expression_handle = handle_non_terminal_operation(expression, expression->non_terminal, &handled);
+    auto get_result = perform_pop(RAX_REG);
 
-    EXPRESSION_LISTING += handle_expression(node);
-    return true;
+    std::string save_result;
+    if (declaration_info->is_register) {
+        save_result = two_operands_operation(MOV_OP, declaration_info->reg, RAX_REG);
+    } else {
+        save_result = two_operands_operation(MOV_OP, to_location_in_stack(declaration_info->location_in_stack),
+                                             RAX_REG);
+    }
+    return expression_handle + get_result + save_result;
 }
 
-void handle_operations(AstNode *root) {
+std::string handle_return_expression(AstNode *node) {
+    std::string save_result_expression;
+
+    if (node->member->expression.type == TYPE_DOUBLE) {
+        save_result_expression = perform_pop_for_float(XMM0_REG);
+    } else {
+        save_result_expression = perform_pop(RAX_REG);
+    }
+    auto return_expr = handle_expression(node);
+
+    return return_expr + save_result_expression;
+}
+
+std::string handle_subprogram(AstNode *node, bool is_procedure) {
+    auto root = declaration_root->children.front();
+    Declaration* subprog_declaration = nullptr;
+    for (auto declaration : root->children) {
+        if (declaration->node == node) {
+            subprog_declaration = declaration;
+            break;
+        }
+    }
+
+    int max_stack_depth = subprog_declaration->max_stack_depth;
+    int addition_to_stack = max_stack_depth + max_stack_depth % (STACK_BIT_DEPTH * 2);
+    auto body = node->tree->next;
+    auto return_expr = node->tree->next->next;
+
+    std::string subprog_label;
+    if (is_procedure) {
+        subprog_label = create_label(node->member->procedure_declaration.name);
+        subprog_label_map[node->member->procedure_declaration.name] = subprog_label;
+    } else {
+        subprog_label = create_label(node->member->function_declaration.name);
+        subprog_label_map[node->member->function_declaration.name] = subprog_label;
+    }
+
+    auto save_base_ptr = perform_push(RBP_REG);
+    auto set_base_ptr = two_operands_operation(MOV_OP, RBP_REG, RSP_REG);
+    auto align_stack_ptr = two_operands_operation(SUB_OP, RSP_REG, std::to_string(addition_to_stack)); // System V AMD 64 requirement
+
+    auto subprog_body = handle_operations(body);
+
+    std::string return_expression;
+    if (is_procedure) {
+        return_expression = "";
+    } else {
+        return_expression = handle_return_expression(return_expr);
+    }
+
+    auto restore_stack_ptr = two_operands_operation(MOV_OP, RSP_REG, RBP_REG);
+    auto restore_base_ptr = perform_pop(RBP_REG);
+    auto transfer_control = no_operands_operation(RET_OP);
+
+    return subprog_label
+        + save_base_ptr + set_base_ptr + align_stack_ptr
+        + subprog_body
+        + return_expression
+        + restore_stack_ptr + restore_base_ptr + transfer_control;
+}
+
+std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal, bool *handled) {
+    switch (non_terminal) {
+        case NT_PROCEDURE: {
+            *handled = true;
+            return handle_subprogram(node, true);
+        }
+        case NT_FUNCTION: {
+            *handled = true;
+            return handle_subprogram(node, false);
+        }
+        case NT_ASSIGN_VARIABLE: {
+            *handled = true;
+            return handle_assign_variable(node);
+        }
+        case NT_EXPRESSION: {
+            *handled = true;
+            return handle_expression(node);
+        }
+        case NT_INVOCATION: {
+            *handled = true;
+            return handle_invocation(node);
+        }
+        default: {
+            *handled = false;
+            return "";
+        }
+    }
+}
+
+std::string handle_operations(AstNode *root) {
     AstNode *node = root;
+    std::string result;
     while (node != nullptr) {
-        bool handled = handle_non_terminal_operation(node, node->non_terminal);
+        bool handled;
+        result += handle_non_terminal_operation(node, node->non_terminal, &handled);
 
         if (!handled && node->tree != nullptr) {
-            handle_operations(node->tree);
+            result += handle_operations(node->tree);
         }
         node = node->next;
     }
+    return result;
 }
 
 void generate_code(AstNode *root) {
@@ -509,8 +673,8 @@ void generate_code(AstNode *root) {
 
     auto basic_string = create_constants(root);
     define_location_in_program_for_variable_declarations(declaration_root);
-    handle_operations(root);
-    file << EXPRESSION_LISTING;
+    file << handle_operations(root);
+    // file << EXPRESSION_LISTING;
     file << (".data:\n" + basic_string);
 
     declaration_root->children.begin();

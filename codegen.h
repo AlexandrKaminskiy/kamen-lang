@@ -11,10 +11,13 @@
 #include <types.h>
 
 inline std::unordered_map<std::string, std::string> string_constant_map;
+inline std::unordered_map<std::string, std::string> subprog_label_map;
 inline std::unordered_map<float, std::string> float_constant_map;
 inline std::unordered_map<bool, std::string> bool_constant_map;
 
+inline int stack_shift = 0;
 inline int constant_counter = 0;
+
 inline const std::string CONSTANT_NAME = "__constant__";
 inline const std::string DEFINE_BYTE = " db ";
 inline const std::string DEFINE_WORD = " dw ";
@@ -24,6 +27,8 @@ inline const int STACK_BIT_DEPTH = 8;
 
 inline std::string EXPRESSION_LISTING;
 
+inline const std::string CALL_OP = "CALL";
+inline const std::string RET_OP = "RET";
 inline const std::string POP_OP = "POP";
 inline const std::string MOV_OP = "MOV";
 inline const std::string MOVZX_OP = "MOVZX";
@@ -100,8 +105,9 @@ const std::array<std::string, 8> register_frac_list = {
     "XMM7"
 };
 
-
+std::string handle_expression(AstNode *node);
+std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal, bool* handled);
 std::string create_constants(AstNode *root);
-
+std::string handle_operations(AstNode *root);
 void generate_code(AstNode *root);
 #endif //CODEGEN_H

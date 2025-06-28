@@ -165,6 +165,7 @@ struct Declaration {
 
     std::list<DeclarationInfo *> variable_declarations;
     std::list<DeclarationInfo *> subprogram_declarations;
+    int max_stack_depth;
 };
 
 struct DeclarationInfo {

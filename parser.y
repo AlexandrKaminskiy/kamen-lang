@@ -149,7 +149,7 @@ subprog_params: { $$ = create_node(NT_SUBPROG_PARAMS); }
       ;
 
 enumeration: { $$ = create_node(NT_ENUMERATION); }
-      | expression COMMA enumeration { printf("End of the enumeration\n"); $$ = add_equal_node($3, $1); }
+      | enumeration COMMA expression { printf("End of the enumeration\n"); $$ = add_equal_node($1, $3); }
       | expression { printf("End of the enumeration\n"); $$ = create_nodes(NT_ENUMERATION, {$1});}
       ;
 
