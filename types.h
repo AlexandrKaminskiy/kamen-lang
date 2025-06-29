@@ -52,6 +52,10 @@ DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, s
 
 bool check_function_and_return_stmt(AstNode *node);
 
+bool check_several_body_lists(AstNode *node);
+
+bool check_several_subprograms_and_bodylists(AstNode *node);
+
 typedef enum {
     NT_PROGRAM = 1,
     NT_SUBPROGRAMS,

@@ -117,8 +117,9 @@ bool in_correct_node(AstNode* root, AstNode* node_to_find) {
         }
     }
     while (root->next != nullptr) {
+
         bool result = in_correct_node(root->next, node_to_find);
-        if (result == true) {
+        if (result == true && !check_several_subprograms_and_bodylists(root)) {
             return true;
         }
         root = root->next;
@@ -144,4 +145,18 @@ DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, s
 
 bool check_function_and_return_stmt(AstNode *node) {
     return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_EXPRESSION;
+}
+
+bool check_several_body_lists(AstNode *node) {
+    return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_BODY_LIST;
+}
+
+bool check_several_subprograms_and_bodylists(AstNode *node) {
+    return node != nullptr && node->next != nullptr && (
+        // (node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_BODY_LIST) ||
+        (
+            (node->non_terminal == NT_PROCEDURE || node->non_terminal == NT_FUNCTION)
+            && (node->next->non_terminal == NT_PROCEDURE || node->next->non_terminal == NT_FUNCTION)
+        )
+    );
 }
