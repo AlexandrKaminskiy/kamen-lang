@@ -1,21 +1,14 @@
-function self(var i: Integer, var j: Integer): Integer
+procedure self(var s: Shape, var s1: Context)
 begin
-    return i + j
 end
 
 procedure main()
 begin
-    var k: Integer
-    var k1: Integer
-    k:=0
-    for i in 1 to 6
-    begin
-        if (k = 20)
-        begin
-            k1 := (0-1) * k
-        end
-        k := k + 5
-    end
-
-    self(k, k1)
+    var s: Shape
+    var s1: Context
+    #s := s1
+    var i: String
+    var j: Integer
+    self(s, s1)
+    log("123")
 end

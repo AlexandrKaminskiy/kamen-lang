@@ -10,15 +10,12 @@ ExpressionInfo *create_expression_info() {
     return info;
 }
 
-DeclarationInfo *create_declaration_for_variable(const std::string &name, const int type) {
+DeclarationInfo *create_declaration_for_variable(const std::string &name, const int type, const int system_type) {
     auto declaration_info = new DeclarationInfo();
     declaration_info->identifier = name;
 
-    if (type < 5) {
-        declaration_info->user_type = static_cast<UserType>(type);
-    } else {
-        declaration_info->system_type = static_cast<SystemType>(type);
-    }
+    declaration_info->user_type = static_cast<UserType>(type);
+    declaration_info->system_type = static_cast<SystemType>(system_type);
 
     return declaration_info;
 }
@@ -56,6 +53,11 @@ bool has_declaration(Declaration *declaration, string variable) {
 }
 
 bool has_subprog_declaration(Declaration *declaration, string subprogram) {
+    auto it = built_in_functions.find(subprogram);
+    if (it != built_in_functions.end()) {
+        return true;
+    }
+
     if (find_var(subprogram, declaration->subprogram_declarations) != nullptr) {
         return true;
     }
@@ -73,7 +75,7 @@ SubprogramDeclaration *create_subprogram_declaration(bool is_function, UserType 
     subprogram->return_type = type;
 
     while (variable_declarations != nullptr) {
-        subprogram->variable_types.push_back(to_user_type(variable_declarations->member->variable_declaration.type));
+        subprogram->variable_types.push_back(to_type(variable_declarations->member->variable_declaration.type));
         variable_declarations = variable_declarations->next;
     }
     // subprogram->variable_declarations = variable_declarations;
@@ -85,7 +87,7 @@ SubprogramDeclaration *create_subprogram_declaration(bool is_function, AstNode *
     subprogram->is_function = is_function;
 
     while (variable_declarations != nullptr) {
-        subprogram->variable_types.push_back(to_user_type(variable_declarations->member->variable_declaration.type));
+        subprogram->variable_types.push_back(to_type(variable_declarations->member->variable_declaration.type));
         variable_declarations = variable_declarations->next;
     }
     return subprogram;
@@ -153,7 +155,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
                 cerr << "Variable was already declared " << var_name << endl;
                 return declaration;
             }
-            auto declaration_info = create_declaration_for_variable(var_name, to_user_type(var_type)); // todo
+            auto declaration_info = create_declaration_for_variable(var_name, to_user_type(var_type), to_system_type(var_type)); // todo
 
             declaration->variable_declarations.push_back(declaration_info);
 
@@ -315,28 +317,56 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             return false;
         }
         case NT_INVOCATION: {
+            auto built_in_params = built_in_functions.find(root->member->invocation.identifier);
+            bool built_in = built_in_params != built_in_functions.end();
             auto subprogram_info = subprogram_declarations[root->member->invocation.identifier];
-            auto var_type = subprogram_info->variable_types.begin();
+            std::list<int>::iterator var_type;
+
+            if (built_in) {
+                var_type = built_in_params->second.begin();
+            } else {
+                var_type = subprogram_info->variable_types.begin();
+            }
+            bool incorrect = false;
 
             auto param = root->tree->tree;
             while (param != nullptr) {
                 handle_non_terminal_op(param, param->non_terminal);
-                if (param->member->expression.type != *var_type) {
-                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier;
+                if (param->member->expression.type != *var_type && param->member->expression.system_type != *var_type) {
+                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect types" << endl;
+                    incorrect = true;
+                    break;
                 }
                 ++var_type;
                 param = param->next;
-                if ((var_type == subprogram_info->variable_types.end() && param != nullptr)
+
+                if (built_in) {
+                    if ((var_type == built_in_params->second.end() && param != nullptr)
+                    || (var_type != built_in_params->second.end() && param == nullptr)) {
+                        cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
+                        incorrect = true;
+                        break;
+                    }
+                } else {
+                    if ((var_type == subprogram_info->variable_types.end() && param != nullptr)
                     || (var_type != subprogram_info->variable_types.end() && param == nullptr)) {
-                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier;
-                    break;
+                        cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
+                        incorrect = true;
+                        break;
+                    }
                 }
             }
-            if ((var_type == subprogram_info->variable_types.end() && param != nullptr)
-                || (var_type != subprogram_info->variable_types.end() && param == nullptr)) {
-                cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier;
+            if (built_in) {
+                if (!incorrect && ((var_type == built_in_params->second.end() && param != nullptr)
+                || (var_type != built_in_params->second.end() && param == nullptr))) {
+                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
+                }
+            } else {
+                if (!incorrect && ((var_type == subprogram_info->variable_types.end() && param != nullptr)
+                || (var_type != subprogram_info->variable_types.end() && param == nullptr))) {
+                    cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
+                }
             }
-
             return true;
         }
         case NT_ASSIGN_VARIABLE: {
@@ -348,6 +378,11 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                         to_user_type(declaration_info->user_type) << ". Given: " << to_user_type(
                             expression->member->expression.type) << endl;
             }
+            if (expression->member->expression.system_type != declaration_info->system_type) {
+                cerr << "Incorrect type for variable assignation. Expected:  " <<
+                        to_system_type(declaration_info->system_type) << ". Given: " << to_system_type(
+                            expression->member->expression.system_type) << endl;
+            }
             return true;
         }
         case NT_EXPRESSION: {
@@ -356,6 +391,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                                                                      root->member->expression.identifier);
                 auto var_type = declaration_info->user_type;
                 root->member->expression.type = var_type;
+                root->member->expression.system_type = declaration_info->system_type;
                 return true;
             }
             if (root->member->expression.expression_type == INVOCATION) {

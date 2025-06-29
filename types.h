@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 #include <list>
+#include <map>
 #include <set>
 #include <unordered_map>
 
@@ -33,6 +34,7 @@ typedef enum {
     TYPE_CONTEXT,
 } SystemType;
 
+int to_type(std::string string);
 
 UserType to_user_type(std::string string);
 
@@ -145,6 +147,7 @@ typedef struct {
     AstNode *node;
     char *op;
     UserType type;
+    SystemType system_type;
     Value value;
     char *identifier;
 } Expression;
@@ -192,7 +195,7 @@ struct ExpressionInfo {
 
 struct SubprogramDeclaration {
     bool is_function;
-    std::list<UserType> variable_types;
+    std::list<int> variable_types;
     UserType return_type;
 };
 
@@ -207,4 +210,15 @@ inline std::set<std::string> eq_operators{"="};
 inline std::set<std::string> logic_bi_operators{"&&", "||"};
 inline std::set<std::string> logic_un_operators{"!"};
 inline std::set<std::string> un_operators{"!"};
+
+inline std::map<std::string, std::list<int>> built_in_functions = {
+    {"log", {TYPE_STRING}},
+    {"draw_pt", {TYPE_INTEGER, TYPE_INTEGER}},
+};
+
+inline std::map<std::string, std::string> built_in_function_labels = {
+    {"log", "_log"},
+    {"draw_pt", "_draw_pt"},
+};
+
 #endif

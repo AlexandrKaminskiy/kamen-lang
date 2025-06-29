@@ -134,11 +134,11 @@ std::string _print_expression(AstNode *root) {
     }
 
     if (root->member->expression.expression_type == VARIABLE) {
-        return " " + to_user_type(root->member->expression.type) + " " + "VARIABLE " + std::string(root->member->expression.identifier);
+        return " " + to_user_type(root->member->expression.type) + " " + to_system_type(root->member->expression.system_type) + " " + "VARIABLE " + std::string(root->member->expression.identifier);
     }
 
     if (root->member->expression.expression_type == INVOCATION) {
-        return " " + to_user_type(root->member->expression.type) + " " + "INVOCATION ";
+        return " " + to_user_type(root->member->expression.type) + " " + to_system_type(root->member->expression.system_type) + " " + "INVOCATION ";
     }
 
     return "";

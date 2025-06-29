@@ -221,7 +221,14 @@ std::string perform_push_for_float(std::string value) {
 }
 
 std::string handle_invocation(AstNode *node) {
-    auto subprog_label = subprog_label_map[std::string(node->member->invocation.identifier)];
+    std::string subprog_label;
+    auto it = built_in_function_labels.find(std::string(node->member->invocation.identifier));
+    if (it != built_in_function_labels.end()) {
+        subprog_label = it->second;
+    } else {
+        subprog_label = subprog_label_map[std::string(node->member->invocation.identifier)];
+    }
+
     auto param = node->tree->tree;
 
     int float_params = 0;
