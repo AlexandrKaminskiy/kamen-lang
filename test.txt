@@ -1,16 +1,28 @@
-function fibonacci(var n: Double): Double
+function fibonacci(var n: Integer): Integer
 begin
-    var n1: Integer
+    var result: Integer
 
-    n1 := 2
-    return n * (n - 1) / n1
+    if (n <= 1)
+    begin
+        result := n
+    end
+    else
+    begin
+        var n1: Integer
+        var n2: Integer
+        n1 := n - 1
+        n2 := n - 2
+
+        result := fibonacci(n1) + fibonacci(n2)
+    end
+
+    return result
 end
 
 procedure main()
 begin
-    var a: Double
-
-    a := fibonacci(10.0) * fibonacci(8.0) * fibonacci(7.0)
+    var n: Integer
+    n := fibonacci(10)
 end
 
 

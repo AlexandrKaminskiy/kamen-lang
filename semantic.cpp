@@ -299,7 +299,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 cerr << "Incorrect type for if condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " <<
                         to_user_type(condition_expression->member->expression.type) << endl;
             }
-            return true;
+            return false;
         }
         case NT_INVOCATION: {
             auto subprogram_info = subprogram_declarations[root->member->invocation.identifier];

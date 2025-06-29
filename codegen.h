@@ -17,7 +17,9 @@ inline std::unordered_map<bool, std::string> bool_constant_map;
 
 inline int stack_shift = 0;
 inline int constant_counter = 0;
+inline int label_counter = 0;
 
+inline std::string LABEL_NAME_PREFIX = "label__";
 inline const std::string CONSTANT_NAME = "__constant__";
 inline const std::string DEFINE_BYTE = " db ";
 inline const std::string DEFINE_WORD = " dw ";
@@ -30,6 +32,8 @@ inline std::string EXPRESSION_LISTING;
 inline const std::string CALL_OP = "CALL";
 inline const std::string RET_OP = "RET";
 inline const std::string POP_OP = "POP";
+inline const std::string JE_OP = "JE";
+inline const std::string JMP_OP = "JMP";
 inline const std::string MOV_OP = "MOV";
 inline const std::string MOVZX_OP = "MOVZX";
 inline const std::string CMP_OP = "CMP";

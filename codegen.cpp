@@ -198,7 +198,11 @@ std::string to_location_in_register(std::string reg) {
     return "[" + reg + "]";
 }
 
-std::string create_label(std::string label) {
+std::string create_label() {
+    return LABEL_NAME_PREFIX + std::to_string(label_counter++);
+}
+
+std::string create_subprog_label(std::string label) {
     return "_" + label;
 }
 
@@ -601,11 +605,11 @@ std::string handle_subprogram(AstNode *node, bool is_procedure) {
 
     std::string subprog_label;
     if (is_procedure) {
-        subprog_label = create_label(node->member->procedure_declaration.name);
+        subprog_label = create_subprog_label(node->member->procedure_declaration.name);
         subprog_label_map[node->member->procedure_declaration.name] = subprog_label;
         subprog_label += ":\n";
     } else {
-        subprog_label = create_label(node->member->function_declaration.name);
+        subprog_label = create_subprog_label(node->member->function_declaration.name);
         subprog_label_map[node->member->function_declaration.name] = subprog_label;
         subprog_label += ":\n";
     }
@@ -634,6 +638,47 @@ std::string handle_subprogram(AstNode *node, bool is_procedure) {
         + restore_stack_ptr + restore_base_ptr + transfer_control;
 }
 
+std::string handle_if_else_block(AstNode *node) {
+    std::string result;
+
+
+    auto else_label = create_label();
+    auto post_if_label = create_label();
+
+    auto condition_calculation = handle_expression(node->tree, false);
+    auto get_condition_result = perform_pop(RAX_REG);
+    auto compare_result = two_operands_operation(CMP_OP, RAX_REG, "0");
+    auto jump_to_post_if = one_operands_operation(JMP_OP, post_if_label);
+
+    AstNode* then_block = node->tree->next;
+    AstNode* else_block = then_block->next;
+
+    std::string then_branch = handle_operations(then_block);
+    std::string else_branch = handle_operations(else_block);
+
+
+    bool has_else_block = else_block != nullptr;
+
+
+    if (has_else_block) {
+        auto jump_to_else_condition = one_operands_operation(JE_OP, else_label);
+        return condition_calculation + get_condition_result
+            + compare_result
+            + jump_to_else_condition
+            + then_branch
+            + jump_to_post_if
+            + else_label + ":\n"
+            + else_branch
+            + post_if_label + ":\n";
+    }
+
+    return condition_calculation + get_condition_result
+           + compare_result
+           + jump_to_post_if
+           + then_branch
+           + post_if_label + ":\n";
+}
+
 std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal, bool *handled) {
     switch (non_terminal) {
         case NT_PROCEDURE: {
@@ -656,11 +701,19 @@ std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_termina
             *handled = true;
             return handle_invocation(node);
         }
+        case NT_IF_BLOCK: {
+            *handled = true;
+            return handle_if_else_block(node);
+        }
         default: {
             *handled = false;
             return "";
         }
     }
+}
+
+bool check_several_body_lists(AstNode *node) {
+    return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_BODY_LIST;
 }
 
 std::string handle_operations(AstNode *root) {
@@ -674,6 +727,9 @@ std::string handle_operations(AstNode *root) {
             result += handle_operations(node->tree);
         }
         if (check_function_and_return_stmt(node)) {
+            break;
+        }
+        if (check_several_body_lists(node)) {
             break;
         }
         node = node->next;
