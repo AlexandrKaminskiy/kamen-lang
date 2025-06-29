@@ -1,14 +1,13 @@
-procedure self(var s: Shape, var s1: Context)
+procedure entrypoint()
 begin
-end
-
-procedure main()
-begin
-    var s: Shape
-    var s1: Context
-    #s := s1
-    var i: String
-    var j: Integer
-    self(s, s1)
-    log("123")
+    var s: String
+    s :=
+    #"test"
+    '''
+    lesha loh
+    lesha loh
+    lesha loh
+    '''
+    #5
+    log(s)
 end

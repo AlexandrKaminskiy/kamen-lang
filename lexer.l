@@ -70,16 +70,17 @@ mod                                             { printf("OPERATOR mod : %s\n", 
 [/]                                             { printf("OPERATOR DIV : %s\n", yytext); yylval.string = strdup(yytext); return DIV;}
 
 
-"'''"                                           { BEGIN(MULTIPLE_STRING); }
+"'''"                                           { msl_buffer[msl_buf_position++] = '\"'; BEGIN(MULTIPLE_STRING); }
 <MULTIPLE_STRING>.                              {
     msl_buffer[msl_buf_position++] = yytext[0];
 }
 
 <MULTIPLE_STRING>"'''"                          {
-    char* msl = (char*) malloc(sizeof(char) * (msl_buf_position - msl_buf_start + 1));
+    char* msl = (char*) malloc(sizeof(char) * (msl_buf_position - msl_buf_start + 2));
     for (int i = 0; i < msl_buf_position - msl_buf_start; i++) {
         msl[i] = msl_buffer[i + msl_buf_start];
     }
+    msl[msl_buf_position - msl_buf_start - 1] = '\"';
     msl[msl_buf_position - msl_buf_start] = '\0';
     msl_buf_start = msl_buf_position;
     yylval.string = msl;

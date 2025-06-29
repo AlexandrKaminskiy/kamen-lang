@@ -278,9 +278,9 @@ std::string handle_expression_terminal(AstNode *current) {
                 to_location_in_data_segment(bool_constant_map[current->member->expression.value.boolean]), QWORD_SIZE);
         }
         case TYPE_STRING: {
-            return perform_push(
-                to_location_in_data_segment(string_constant_map[current->member->expression.value.string]),
-                QWORD_SIZE); // todo QWORD???
+            auto get_string = two_operands_operation(LEA_OP, RAX_REG, to_location_in_data_segment(string_constant_map[current->member->expression.value.string]));
+
+            return get_string + perform_push(RAX_REG);
         }
         case TYPE_INTEGER: {
             return perform_push(std::to_string(current->member->expression.value.integer));
@@ -815,15 +815,23 @@ std::string handle_operations(AstNode *root) {
 void generate_code(AstNode *root) {
     std::ofstream file("../out.asm");
 
-    file << "global _start\n";
+    file << "extern _log\n";
+    file << "global _main\n";
     file << "section .text\n";
-    file << "_start:\n";
+    file << "_main:\n";
+    file << "CALL _entrypoint\n";
+    file << "JMP _termination\n";
 
-    auto basic_string = create_constants(root);
+    auto constant_string = create_constants(root);
     define_location_in_program_for_variable_declarations(declaration_root);
     file << handle_operations(root);
     // file << EXPRESSION_LISTING;
-    file << (".data:\n" + basic_string);
+    file << "_termination:\n";
+    file << "MOV     RAX, 0x2000001\n";
+    file << "XOR     RDI, RDI\n";
+    file << "SYSCALL\n";
+
+    file << (".data:\n" + constant_string);
 
     declaration_root->children.begin();
     string_constant_map.clear();

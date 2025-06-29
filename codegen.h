@@ -29,6 +29,7 @@ inline const int STACK_BIT_DEPTH = 8;
 
 inline std::string EXPRESSION_LISTING;
 
+inline const std::string LEA_OP = "LEA";
 inline const std::string CALL_OP = "CALL";
 inline const std::string RET_OP = "RET";
 inline const std::string POP_OP = "POP";

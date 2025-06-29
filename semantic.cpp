@@ -457,10 +457,10 @@ void check_operation_types(AstNode *root) {
     }
 }
 
-void has_main() {
-    auto subprogram_declaration = subprogram_declarations["main"];
+void entrypoint() {
+    auto subprogram_declaration = subprogram_declarations["entrypoint"];
     if (subprogram_declaration == nullptr) {
-        cerr << "Program doesnt contain an entrypoint" << endl;
+        cerr << "Program doesn't contain the entrypoint" << endl;
         return;
     }
 
@@ -478,7 +478,7 @@ void make_semantic(AstNode *root) {
     declaration_root = create_declaration(nullptr, root);
     check_variable_and_function_visibility(root, declaration_root);
     check_operation_types(root);
-    has_main();
+    entrypoint();
     // subprogram_declarations.begin();
     // cout << subprogram_declarations << endl;
 }

@@ -230,6 +230,7 @@ AstNode *add_expression_node(const int value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.integer = value;
     root->member->expression.type = TYPE_INTEGER;
+    root->member->expression.system_type = S_TYPE_INCORRECT;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
@@ -238,6 +239,7 @@ AstNode *add_expression_node(bool value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.boolean = value;
     root->member->expression.type = TYPE_BOOLEAN;
+    root->member->expression.system_type = S_TYPE_INCORRECT;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
@@ -246,6 +248,7 @@ AstNode *add_expression_node(const float value) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.floating = value;
     root->member->expression.type = TYPE_DOUBLE;
+    root->member->expression.system_type = S_TYPE_INCORRECT;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
@@ -254,6 +257,7 @@ AstNode *add_expression_node(char* value, int stub) {
     auto root = create_node(NT_EXPRESSION);
     root->member->expression.value.string = value;
     root->member->expression.type = TYPE_STRING;
+    root->member->expression.system_type = S_TYPE_INCORRECT;
     root->member->expression.expression_type = TERMINAL;
     return root;
 }
