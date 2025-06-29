@@ -427,10 +427,10 @@ std::string handle_comp_operators(AstNode *current, std::string op) {
             set_result = one_operands_operation(SETLE_OP, AL_REG);
         }
         if (op == "<") {
-            set_result = one_operands_operation(SETG_OP, AL_REG);
+            set_result = one_operands_operation(SETL_OP, AL_REG);
         }
         if (op == ">") {
-            set_result = one_operands_operation(SETL_OP, AL_REG);
+            set_result = one_operands_operation(SETG_OP, AL_REG);
         }
         auto right = perform_pop(RBX_REG);
         auto left = perform_pop(RAX_REG);
@@ -509,7 +509,7 @@ std::string handle_expression(AstNode *node, bool handle_next) {
             }
             case VARIABLE: {
                 auto declaration_info =
-                        find_declaration(declaration_root, node, current->member->expression.identifier);
+                        find_declaration(declaration_root, current, current->member->expression.identifier);
                 if (declaration_info->is_register) {
                     if (declaration_info->user_type == TYPE_DOUBLE) {
                         result += perform_push_for_float(declaration_info->reg);
@@ -641,7 +641,6 @@ std::string handle_subprogram(AstNode *node, bool is_procedure) {
 std::string handle_if_else_block(AstNode *node) {
     std::string result;
 
-
     auto else_label = create_label();
     auto post_if_label = create_label();
 
@@ -679,6 +678,30 @@ std::string handle_if_else_block(AstNode *node) {
            + post_if_label + ":\n";
 }
 
+std::string handle_while_block(AstNode *node) {
+    auto while_label = create_label();
+    auto post_while_label = create_label();
+
+    auto condition_calculation = handle_expression(node->tree, false);
+    auto get_condition_result = perform_pop(RAX_REG);
+    auto compare_result = two_operands_operation(CMP_OP, RAX_REG, "0");
+    auto jump_to_post_while = one_operands_operation(JE_OP, post_while_label);
+
+    auto jump_to_while_label = one_operands_operation(JMP_OP, while_label);
+
+    AstNode* while_block = node->tree->next;
+
+    std::string while_branch = handle_operations(while_block);
+
+    return while_label + ":\n"
+           + condition_calculation + get_condition_result
+           + compare_result
+           + jump_to_post_while
+           + while_branch
+           + jump_to_while_label
+           + post_while_label + ":\n";
+}
+
 std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal, bool *handled) {
     switch (non_terminal) {
         case NT_PROCEDURE: {
@@ -705,6 +728,10 @@ std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_termina
             *handled = true;
             return handle_if_else_block(node);
         }
+        case NT_WHILE_LOOP: {
+            *handled = true;
+            return handle_while_block(node);
+        }
         default: {
             *handled = false;
             return "";
@@ -712,9 +739,7 @@ std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_termina
     }
 }
 
-bool check_several_body_lists(AstNode *node) {
-    return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_BODY_LIST;
-}
+
 
 std::string handle_operations(AstNode *root) {
     AstNode *node = root;

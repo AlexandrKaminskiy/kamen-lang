@@ -24,6 +24,3 @@ begin
     var n: Integer
     n := fibonacci(10)
 end
-
-
-

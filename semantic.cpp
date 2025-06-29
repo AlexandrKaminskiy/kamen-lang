@@ -290,7 +290,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 cerr << "Incorrect type for while loop condition. Expected:  " << to_user_type(TYPE_BOOLEAN) <<
                         ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
             }
-            return true;
+            return false;
         }
         case NT_IF_BLOCK: {
             auto condition_expression = root->tree;
