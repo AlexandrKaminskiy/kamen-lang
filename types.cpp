@@ -141,3 +141,7 @@ DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, s
     }
     return nullptr;
 }
+
+bool check_function_and_return_stmt(AstNode *node) {
+    return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_EXPRESSION;
+}

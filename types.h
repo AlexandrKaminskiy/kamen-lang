@@ -50,6 +50,8 @@ bool in_correct_node(AstNode* root, AstNode* node_to_find);
 
 DeclarationInfo *find_declaration(Declaration* current, AstNode* node_to_find, std::string name_to_find);
 
+bool check_function_and_return_stmt(AstNode *node);
+
 typedef enum {
     NT_PROGRAM = 1,
     NT_SUBPROGRAMS,

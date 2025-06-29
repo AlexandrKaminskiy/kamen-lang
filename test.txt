@@ -1,4 +1,4 @@
-function fibonacci(var n: Integer): Integer
+function fibonacci(var n: Double): Double
 begin
     var n1: Integer
 
@@ -8,9 +8,9 @@ end
 
 procedure main()
 begin
-    var a: Integer
+    var a: Double
 
-    fibonacci(10)
+    a := fibonacci(10.0) * fibonacci(8.0) * fibonacci(7.0)
 end
 
 

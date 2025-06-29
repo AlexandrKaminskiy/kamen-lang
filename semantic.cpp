@@ -195,10 +195,6 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
     }
 }
 
-bool check_function_and_return_stmt(AstNode *node) {
-    return node != nullptr && node->next != nullptr && node->non_terminal == NT_BODY_LIST && node->next->non_terminal == NT_EXPRESSION;
-}
-
 void check_variable_and_function_visibility(AstNode *root, Declaration *declaration) {
     AstNode *node = root;
     while (node != nullptr) {

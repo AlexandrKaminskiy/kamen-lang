@@ -493,7 +493,7 @@ std::string handle_expression(AstNode *node, bool handle_next) {
     std::string result;
     AstNode *current = node;
 
-    if (current->tree != nullptr) {
+    if (current->tree != nullptr && current->member->expression.expression_type != INVOCATION) {
         result += handle_expression(current->tree, true);
     }
 
@@ -507,15 +507,24 @@ std::string handle_expression(AstNode *node, bool handle_next) {
                 auto declaration_info =
                         find_declaration(declaration_root, node, current->member->expression.identifier);
                 if (declaration_info->is_register) {
-                    result += perform_push(declaration_info->reg);
+                    if (declaration_info->user_type == TYPE_DOUBLE) {
+                        result += perform_push_for_float(declaration_info->reg);
+                    } else {
+                        result += perform_push(declaration_info->reg);
+                    }
                 } else {
                     result += perform_push(to_location_in_stack(declaration_info->location_in_stack), QWORD_SIZE);
                 }
                 break;
             }
             case INVOCATION: {
-
-                break; //todo
+                result += handle_invocation(current->tree);
+                if (current->member->expression.type == TYPE_DOUBLE) {
+                    result += perform_push_for_float(XMM0_REG);
+                } else {
+                    result += perform_push(RAX_REG);
+                }
+                break;
             }
         }
     } else {
@@ -663,6 +672,9 @@ std::string handle_operations(AstNode *root) {
 
         if (!handled && node->tree != nullptr) {
             result += handle_operations(node->tree);
+        }
+        if (check_function_and_return_stmt(node)) {
+            break;
         }
         node = node->next;
     }
