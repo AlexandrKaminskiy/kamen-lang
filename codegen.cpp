@@ -325,7 +325,7 @@ std::string handle_arith_ops(AstNode *current, std::string op) {
                 auto result = perform_push(RAX_REG);
                 return (right + left + zero_rdx + cqo + operation + result);
             }
-            if (op == "mod") {
+            if (op == "mod") {//todo fix
                 auto right = perform_pop(RBX_REG);
                 auto left = perform_pop(RAX_REG);
                 auto zero_rdx = zero_register(RDX_REG);
@@ -647,7 +647,8 @@ std::string handle_if_else_block(AstNode *node) {
     auto condition_calculation = handle_expression(node->tree, false);
     auto get_condition_result = perform_pop(RAX_REG);
     auto compare_result = two_operands_operation(CMP_OP, RAX_REG, "0");
-    auto jump_to_post_if = one_operands_operation(JMP_OP, post_if_label);
+    auto jump_to_post_if_in_if_else = one_operands_operation(JMP_OP, post_if_label);
+    auto jump_to_post_if = one_operands_operation(JE_OP, post_if_label);
 
     AstNode* then_block = node->tree->next;
     AstNode* else_block = then_block->next;
@@ -665,7 +666,7 @@ std::string handle_if_else_block(AstNode *node) {
             + compare_result
             + jump_to_else_condition
             + then_branch
-            + jump_to_post_if
+            + jump_to_post_if_in_if_else
             + else_label + ":\n"
             + else_branch
             + post_if_label + ":\n";
@@ -702,6 +703,46 @@ std::string handle_while_block(AstNode *node) {
            + post_while_label + ":\n";
 }
 
+std::string handle_for_block(AstNode * node) {
+
+    auto declaration_info = find_declaration(declaration_root, node, node->member->for_loop.name);
+    auto from_expr = node->tree->member->expression.value.integer;
+    auto to_expr = node->tree->next->member->expression.value.integer;
+    auto save_result = two_operands_operation(
+        MOV_OP,
+        QWORD_SIZE + to_location_in_stack(declaration_info->location_in_stack),
+        std::to_string(from_expr)
+    );
+
+
+    auto for_label = create_label();
+    auto post_for_label = create_label();
+
+    auto condition_calculation = two_operands_operation(
+        CMP_OP,
+        QWORD_SIZE + to_location_in_stack(declaration_info->location_in_stack),
+        std::to_string(to_expr)
+    );
+
+    auto jump_to_post_for = one_operands_operation(JG_OP, post_for_label);
+
+    auto jump_to_for_label = one_operands_operation(JMP_OP, for_label);
+
+    AstNode* for_block = node->tree->next->next;
+
+    std::string for_branch = handle_operations(for_block);
+    std::string inc_loop_var = one_operands_operation(INC_OP,  QWORD_SIZE + to_location_in_stack(declaration_info->location_in_stack));
+
+    return save_result
+        + for_label + ":\n"
+        + condition_calculation
+        + jump_to_post_for
+        + for_branch
+        + inc_loop_var
+        + jump_to_for_label
+        + post_for_label + ":\n";
+}
+
 std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_terminal, bool *handled) {
     switch (non_terminal) {
         case NT_PROCEDURE: {
@@ -732,14 +773,16 @@ std::string handle_non_terminal_operation(AstNode *node, NonTerminal non_termina
             *handled = true;
             return handle_while_block(node);
         }
+        case NT_FOR_LOOP: {
+            *handled = true;
+            return handle_for_block(node);
+        }
         default: {
             *handled = false;
             return "";
         }
     }
 }
-
-
 
 std::string handle_operations(AstNode *root) {
     AstNode *node = root;

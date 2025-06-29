@@ -292,6 +292,19 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             }
             return false;
         }
+        case NT_FOR_LOOP: {
+            auto from = root->tree;
+            auto to = root->tree;
+
+            from->member->expression.expression_type == TERMINAL;
+            if (from->member->expression.expression_type != TERMINAL
+                || to->member->expression.expression_type != TERMINAL
+                || from->member->expression.type != TYPE_INTEGER
+                || to->member->expression.type != TYPE_INTEGER) {
+                cerr << "\"For loop\" boundaries should be constant and integer" << endl;
+            }
+            return false;
+        }
         case NT_IF_BLOCK: {
             auto condition_expression = root->tree;
             handle_non_terminal_op(condition_expression, condition_expression->non_terminal);

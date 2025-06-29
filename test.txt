@@ -1,26 +1,21 @@
-function fibonacci(var n: Integer): Integer
+function self(var i: Integer, var j: Integer): Integer
 begin
-    var result: Integer
-
-    if (n <= 1)
-    begin
-        result := n
-    end
-    else
-    begin
-        var n1: Integer
-        var n2: Integer
-        n1 := n - 1
-        n2 := n - 2
-
-        result := fibonacci(n1) + fibonacci(n2)
-    end
-
-    return result
+    return i + j
 end
 
 procedure main()
 begin
-    var n: Integer
-    n := fibonacci(10)
+    var k: Integer
+    var k1: Integer
+    k:=0
+    for i in 1 to 6
+    begin
+        if (k = 20)
+        begin
+            k1 := (0-1) * k
+        end
+        k := k + 5
+    end
+
+    self(k, k1)
 end
