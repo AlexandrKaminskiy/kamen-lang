@@ -2,12 +2,38 @@ procedure entrypoint()
 begin
     var context: Context
     var circle: Shape
+    var text: Shape
+    var rect: Shape
+    var reflect: Shape
+    var line: Shape
+    var draw_bezier: Shape
+
     context := CreateContext("out.svg", 800, 600)
+
     for i in 1 to 9
     begin
-        #circle := DrawCircle(50.0 * i, 100.0, 20)
-        AddToContext(context, DrawCircle(50.0 * i, 100.0, 20))
+        circle := DrawCircle(50.0 * i, 100.0, 20)
+        AddToContext(context, circle)
     end
+
+    text := DrawText("Love you, Liz!", 50.0, 200.0, 20.0, "serif")
+    AddToContext(context, text)
+    Fill(text, 200, 100, 100)
+
+    rect := DrawRect(200.0, 200.0, 100.0, 100.0)
+    Rotate(rect, 3.14 / 4)
+    Fill(rect, 200, 200, 100)
+    AddToContext(context, rect)
+
+    reflect := Reflect(rect, 300.0, 300.0)
+    AddToContext(context, reflect)
+
+    line := DrawLine(400.0, 300.0, 100.0, 100.0)
+    Rotate(line, 3.14 / 4)
+    AddToContext(context, line)
+
+    draw_bezier := DrawBezier(100.0, 100.0, 150.0, 123.0, 395.0, 234.0, 200.0, 200.0)
+    AddToContext(context, draw_bezier)
 
     Render(context)
 end

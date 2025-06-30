@@ -215,45 +215,47 @@ inline std::set<std::string> logic_bi_operators{"&&", "||"};
 inline std::set<std::string> logic_un_operators{"!"};
 inline std::set<std::string> un_operators{"!"};
 
-// inline std::map<std::string, std::list<int>> built_in_functions = {
-//     {"draw_text", {TYPE_STRING, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_INTEGER, TYPE_INTEGER, TYPE_INTEGER, TYPE_DOUBLE, TYPE_STRING}},
-// };
-//
-// inline std::map<std::string, std::string> built_in_function_labels = {
-//     {"draw_text", "draw_text"},
-// };
-//
-// inline std::map<std::string, int> built_in_return_type = {
-//     {"draw_text", TYPE_SHAPE},
-// };
-
 inline std::map<std::string, std::list<int>> built_in_functions = {
-    // draw_text уже есть
-    // {"draw_text", {TYPE_STRING, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_INTEGER, TYPE_INTEGER, TYPE_INTEGER, TYPE_DOUBLE, TYPE_STRING}},
-    {"CreateContext", {TYPE_STRING, TYPE_INTEGER, TYPE_INTEGER}},
     {"Render", {TYPE_CONTEXT}},
+    {"CreateContext", {TYPE_STRING, TYPE_INTEGER, TYPE_INTEGER}},
+    {"DrawBezier", {TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE}},
+    {"DrawText", {TYPE_STRING, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_STRING}},
     {"DrawCircle", {TYPE_DOUBLE, TYPE_DOUBLE, TYPE_INTEGER}},
     {"DrawRect", {TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE}},
+    {"DrawLine", {TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE}},
+    {"Fill", {TYPE_SHAPE, TYPE_INTEGER, TYPE_INTEGER, TYPE_INTEGER}},
+    {"Rotate", {TYPE_SHAPE, TYPE_DOUBLE}},
+    {"Reflect", {TYPE_SHAPE, TYPE_DOUBLE, TYPE_DOUBLE}},
     {"AddToContext", {TYPE_CONTEXT, TYPE_SHAPE}},
     {"RemoveFromContext", {TYPE_CONTEXT, TYPE_SHAPE}},
 };
 
 inline std::map<std::string, std::string> built_in_function_labels = {
-    // {"draw_text", "draw_text"},
-    {"CreateContext", "CreateContext"},
     {"Render", "Render"},
+    {"CreateContext", "CreateContext"},
+    {"DrawBezier", "DrawBezier"},
+    {"DrawText", "DrawText"},
     {"DrawCircle", "DrawCircle"},
     {"DrawRect", "DrawRect"},
+    {"DrawLine", "DrawLine"},
+    {"Fill", "Fill"},
+    {"Rotate", "Rotate"},
+    {"Reflect", "Reflect"},
     {"AddToContext", "AddToContext"},
     {"RemoveFromContext", "RemoveFromContext"},
 };
 
 inline std::map<std::string, int> built_in_return_type = {
-    // {"draw_text", TYPE_SHAPE},
-    {"CreateContext", TYPE_CONTEXT},
     {"Render", U_TYPE_INCORRECT},
+    {"CreateContext", TYPE_CONTEXT},
+    {"DrawBezier", TYPE_SHAPE},
+    {"DrawText", TYPE_SHAPE},
     {"DrawCircle", TYPE_SHAPE},
     {"DrawRect", TYPE_SHAPE},
+    {"DrawLine", TYPE_SHAPE},
+    {"Fill", U_TYPE_INCORRECT},
+    {"Rotate", U_TYPE_INCORRECT},
+    {"Reflect", TYPE_SHAPE},
     {"AddToContext", U_TYPE_INCORRECT},
     {"RemoveFromContext", U_TYPE_INCORRECT},
 };
