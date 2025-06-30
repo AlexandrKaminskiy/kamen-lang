@@ -199,7 +199,7 @@ struct SubprogramDeclaration {
     UserType return_type;
 };
 
-inline bool dbg = false;
+inline bool dbg = true;
 inline bool syntax_errors = false;
 inline bool semantic_errors = false;
 
@@ -215,14 +215,47 @@ inline std::set<std::string> logic_bi_operators{"&&", "||"};
 inline std::set<std::string> logic_un_operators{"!"};
 inline std::set<std::string> un_operators{"!"};
 
+// inline std::map<std::string, std::list<int>> built_in_functions = {
+//     {"draw_text", {TYPE_STRING, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_INTEGER, TYPE_INTEGER, TYPE_INTEGER, TYPE_DOUBLE, TYPE_STRING}},
+// };
+//
+// inline std::map<std::string, std::string> built_in_function_labels = {
+//     {"draw_text", "draw_text"},
+// };
+//
+// inline std::map<std::string, int> built_in_return_type = {
+//     {"draw_text", TYPE_SHAPE},
+// };
+
 inline std::map<std::string, std::list<int>> built_in_functions = {
-    {"log", {TYPE_STRING}},
-    {"draw_pt", {TYPE_INTEGER, TYPE_INTEGER}},
+    // draw_text уже есть
+    // {"draw_text", {TYPE_STRING, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_INTEGER, TYPE_INTEGER, TYPE_INTEGER, TYPE_DOUBLE, TYPE_STRING}},
+    {"CreateContext", {TYPE_STRING, TYPE_INTEGER, TYPE_INTEGER}},
+    {"Render", {TYPE_CONTEXT}},
+    {"DrawCircle", {TYPE_DOUBLE, TYPE_DOUBLE, TYPE_INTEGER}},
+    {"DrawRect", {TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE, TYPE_DOUBLE}},
+    {"AddToContext", {TYPE_CONTEXT, TYPE_SHAPE}},
+    {"RemoveFromContext", {TYPE_CONTEXT, TYPE_SHAPE}},
 };
 
 inline std::map<std::string, std::string> built_in_function_labels = {
-    {"log", "_log"},
-    {"draw_pt", "_draw_pt"},
+    // {"draw_text", "draw_text"},
+    {"CreateContext", "CreateContext"},
+    {"Render", "Render"},
+    {"DrawCircle", "DrawCircle"},
+    {"DrawRect", "DrawRect"},
+    {"AddToContext", "AddToContext"},
+    {"RemoveFromContext", "RemoveFromContext"},
+};
+
+inline std::map<std::string, int> built_in_return_type = {
+    // {"draw_text", TYPE_SHAPE},
+    {"CreateContext", TYPE_CONTEXT},
+    {"Render", U_TYPE_INCORRECT},
+    {"DrawCircle", TYPE_SHAPE},
+    {"DrawRect", TYPE_SHAPE},
+    {"AddToContext", U_TYPE_INCORRECT},
+    {"RemoveFromContext", U_TYPE_INCORRECT},
 };
 
 #endif

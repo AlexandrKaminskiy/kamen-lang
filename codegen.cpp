@@ -47,7 +47,7 @@ std::string handle_constant(AstNode *root) {
 
             string_constant_map[root->member->expression.value.string] = constant_name;
 
-            return constant_name + DEFINE_BYTE + root->member->expression.value.string + "\n";
+            return constant_name + DEFINE_BYTE + root->member->expression.value.string + ", 0\n";
         }
         default: return "";
     }
@@ -812,13 +812,19 @@ std::string handle_operations(AstNode *root) {
     return result;
 }
 
+std::string add_extern_decl() {
+    std::string result;
+    for (auto bif: built_in_functions) {
+        result += "extern " + bif.first + "\n";
+    }
+    return result;
+}
 void generate_code(AstNode *root) {
     std::ofstream file("../out.asm");
-
-    file << "extern _log\n";
-    file << "global _main\n";
+    file << add_extern_decl();
+    file << "global main\n";
     file << "section .text\n";
-    file << "_main:\n";
+    file << "main:\n";
     file << "CALL _entrypoint\n";
     file << "JMP _termination\n";
 
@@ -827,8 +833,8 @@ void generate_code(AstNode *root) {
     file << handle_operations(root);
     // file << EXPRESSION_LISTING;
     file << "_termination:\n";
-    file << "MOV     RAX, 0x2000001\n";
-    file << "XOR     RDI, RDI\n";
+    file << "MOV RAX, 60\n";
+    file << "XOR RDI, RDI\n";
     file << "SYSCALL\n";
 
     file << (".data:\n" + constant_string);

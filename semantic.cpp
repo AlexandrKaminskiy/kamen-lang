@@ -418,11 +418,22 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             }
             if (root->member->expression.expression_type == INVOCATION) {
                 auto invocation = root->tree;
+                auto built_in_rt = built_in_return_type.find(std::string(invocation->member->invocation.identifier));
+                bool built_in = built_in_rt != built_in_return_type.end();
+
                 auto subprogram_info = subprogram_declarations[invocation->member->invocation.identifier];
+
+                if (built_in) {
+                    root->member->expression.type = U_TYPE_INCORRECT;
+                    root->member->expression.system_type = static_cast<SystemType>(built_in_rt->second);
+                } else {
+                    root->member->expression.type = subprogram_info->return_type;
+                    root->member->expression.system_type = S_TYPE_INCORRECT;
+                }
+
                 auto left = root->tree;
                 handle_non_terminal_op(left, left->non_terminal);
 
-                root->member->expression.type = subprogram_info->return_type;
                 return true;
             }
 

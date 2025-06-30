@@ -1,34 +1,13 @@
 procedure entrypoint()
 begin
+    var context: Context
+    var circle: Shape
+    context := CreateContext("out.svg", 800, 600)
     for i in 1 to 9
     begin
-        i := 12.3
+        #circle := DrawCircle(50.0 * i, 100.0, 20)
+        AddToContext(context, DrawCircle(50.0 * i, 100.0, 20))
     end
-end
 
-#procedure entrypoint1()
-#begin
-#    if true)
-#        begin
-#
-#        end
-#
-#end
-#
-#procedure entrypoint2()
-#begin
-#    while
-#        begin
-#
-#        end
-#
-#end
-#
-#procedure entrypoint5(): Integer
-#begin
-#    while
-#        begin
-#
-#        end
-#
-#end
+    Render(context)
+end
