@@ -19,8 +19,10 @@ AstNode *add_seq_node(AstNode *what) {
 }
 
 void print_tree() {
-    cout << "Printing tree" << endl;
-    cout << _print_tree(root_node_ptr, "", "");
+    if (dbg) {
+        cout << "Printing tree" << endl;
+        cout << _print_tree(root_node_ptr, "", "");
+    }
 }
 
 std::string _print_declare_variable(AstNode *root) {

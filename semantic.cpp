@@ -104,6 +104,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             if (!ha) {
                 cerr << "Variable was not declared " << var_name << endl;
+                semantic_errors = true;
                 return declaration;
             }
 
@@ -116,6 +117,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             if (!ha) {
                 cerr << "Subprogram was not declared " << subprog_name << endl;
+                semantic_errors = true;
                 return declaration;
             }
 
@@ -128,6 +130,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             if (!ha) {
                 cerr << "Variable was not declared " << var_name << endl;
+                semantic_errors = true;
                 return declaration;
             }
 
@@ -138,6 +141,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
             bool ha = has_declaration(declaration, var_name);
             if (ha) {
                 cerr << "Variable was already declared " << var_name << endl;
+                semantic_errors = true;
                 return declaration;
             }
             auto declaration_info = create_declaration_info(var_name, TYPE_INTEGER); // todo
@@ -153,6 +157,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             if (ha) {
                 cerr << "Variable was already declared " << var_name << endl;
+                semantic_errors = true;
                 return declaration;
             }
             auto declaration_info = create_declaration_for_variable(var_name, to_user_type(var_type), to_system_type(var_type)); // todo
@@ -167,6 +172,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             if (subprogram_declarations.count(root->member->function_declaration.name) > 0) {
                 cerr << "Subprogram was declared " << declaration_info->identifier << endl;
+                semantic_errors = true;
             }
             auto subprogram_declaration = create_subprogram_declaration(
                 true, root->member->function_declaration.return_type, root->tree->tree);
@@ -180,6 +186,7 @@ Declaration *handle_var_or_function(AstNode *root, NonTerminal non_terminal, Dec
 
             if (subprogram_declarations.count(root->member->function_declaration.name) > 0) {
                 cerr << "Subprogram was declared " << declaration_info->identifier << endl;
+                semantic_errors = true;
             }
             auto subprogram_declaration = create_subprogram_declaration(false, root->tree->tree);
             subprogram_declarations[string(root->member->function_declaration.name)] = subprogram_declaration;
@@ -226,6 +233,7 @@ void handle_arith_ops(AstNode *root, AstNode *left, AstNode *right) {
         return;
     }
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+    semantic_errors = true;
 }
 
 void handle_comp_ops(AstNode *root, AstNode *left, AstNode *right) {
@@ -236,6 +244,7 @@ void handle_comp_ops(AstNode *root, AstNode *left, AstNode *right) {
     }
 
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+    semantic_errors = true;
 }
 
 void handle_eq_ops(AstNode *root, AstNode *left, AstNode *right) {
@@ -251,6 +260,7 @@ void handle_eq_ops(AstNode *root, AstNode *left, AstNode *right) {
     }
 
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+    semantic_errors = true;
 }
 
 void handle_logical_bi_ops(AstNode *root, AstNode *left, AstNode *right) {
@@ -260,6 +270,7 @@ void handle_logical_bi_ops(AstNode *root, AstNode *left, AstNode *right) {
     }
 
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+    semantic_errors = true;
 }
 
 void handle_logical_unary_ops(AstNode *root, AstNode *left) {
@@ -269,10 +280,10 @@ void handle_logical_unary_ops(AstNode *root, AstNode *left) {
     }
 
     cerr << "Incorrect types for operator " << root->member->expression.op << endl;
+    semantic_errors = true;
 }
 
 bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
-    cout << "Non-terminal handling..." << to_nt_string(non_terminal) << endl;
     switch (non_terminal) {
         case NT_FUNCTION: {
             auto subprogram_info = subprogram_declarations[root->member->function_declaration.name];
@@ -282,6 +293,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             if (subprogram_info->return_type != return_node->member->expression.type) {
                 cerr << "Incorrect return type. Expected: " << to_user_type(subprogram_info->return_type) << ". Given: "
                         << to_user_type(return_node->member->expression.type) << endl;
+                semantic_errors = true;
             }
             return false;
         }
@@ -291,6 +303,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             if (condition_expression->member->expression.type != TYPE_BOOLEAN) {
                 cerr << "Incorrect type for while loop condition. Expected:  " << to_user_type(TYPE_BOOLEAN) <<
                         ". Given: " << to_user_type(condition_expression->member->expression.type) << endl;
+                semantic_errors = true;
             }
             return false;
         }
@@ -304,6 +317,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 || from->member->expression.type != TYPE_INTEGER
                 || to->member->expression.type != TYPE_INTEGER) {
                 cerr << "\"For loop\" boundaries should be constant and integer" << endl;
+                semantic_errors = true;
             }
             return false;
         }
@@ -313,6 +327,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
             if (condition_expression->member->expression.type != TYPE_BOOLEAN) {
                 cerr << "Incorrect type for if condition. Expected:  " << to_user_type(TYPE_BOOLEAN) << ". Given: " <<
                         to_user_type(condition_expression->member->expression.type) << endl;
+                semantic_errors = true;
             }
             return false;
         }
@@ -335,6 +350,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 if (param->member->expression.type != *var_type && param->member->expression.system_type != *var_type) {
                     cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect types" << endl;
                     incorrect = true;
+                    semantic_errors = true;
                     break;
                 }
                 ++var_type;
@@ -345,6 +361,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                     || (var_type != built_in_params->second.end() && param == nullptr)) {
                         cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
                         incorrect = true;
+                        semantic_errors = true;
                         break;
                     }
                 } else {
@@ -352,6 +369,7 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                     || (var_type != subprogram_info->variable_types.end() && param == nullptr)) {
                         cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
                         incorrect = true;
+                        semantic_errors = true;
                         break;
                     }
                 }
@@ -360,11 +378,13 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 if (!incorrect && ((var_type == built_in_params->second.end() && param != nullptr)
                 || (var_type != built_in_params->second.end() && param == nullptr))) {
                     cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
+                    semantic_errors = true;
                 }
             } else {
                 if (!incorrect && ((var_type == subprogram_info->variable_types.end() && param != nullptr)
                 || (var_type != subprogram_info->variable_types.end() && param == nullptr))) {
                     cerr << "Incorrect subprogram invocation: " << root->member->invocation.identifier << ". Incorrect param quantity" << endl;
+                    semantic_errors = true;
                 }
             }
             return true;
@@ -377,11 +397,13 @@ bool handle_non_terminal_op(AstNode *root, NonTerminal non_terminal) {
                 cerr << "Incorrect type for variable assignation. Expected:  " <<
                         to_user_type(declaration_info->user_type) << ". Given: " << to_user_type(
                             expression->member->expression.type) << endl;
+                semantic_errors = true;
             }
             if (expression->member->expression.system_type != declaration_info->system_type) {
                 cerr << "Incorrect type for variable assignation. Expected:  " <<
                         to_system_type(declaration_info->system_type) << ". Given: " << to_system_type(
                             expression->member->expression.system_type) << endl;
+                semantic_errors = true;
             }
             return true;
         }
@@ -461,16 +483,19 @@ void entrypoint() {
     auto subprogram_declaration = subprogram_declarations["entrypoint"];
     if (subprogram_declaration == nullptr) {
         cerr << "Program doesn't contain the entrypoint" << endl;
+        semantic_errors = true;
         return;
     }
 
     if (subprogram_declaration->is_function) {
         cerr << "Entrypoint should be a procedure" << endl;
+        semantic_errors = true;
         return;
     }
 
     if (!subprogram_declaration->variable_types.empty()) {
         cerr << "Entrypoint shouldn't contain procedure params" << endl;
+        semantic_errors = true;
     }
 }
 

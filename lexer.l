@@ -4,6 +4,8 @@ typedef struct AstNode AstNode;
 extern FILE *yyin;
 extern int yyparse(void);
 
+bool lex_dbg = false;
+
 int msl_buf_start = 0;
 int msl_buf_position = 0;
 char msl_buffer[8192];
@@ -13,61 +15,61 @@ char msl_buffer[8192];
 %x MULTIPLE_STRING
 
 %%
-#[^\n]*                                         { printf("ONE STRING COMMENT: %s\n", yytext); }
-begin                                           { printf("KEYWORD begin: %s\n", yytext); return BEGIN_KW;}
-end                                             { printf("KEYWORD end: %s\n", yytext); return END;}
-if                                              { printf("KEYWORD if: %s\n", yytext); return IF;}
-else                                            { printf("KEYWORD else: %s\n", yytext); return ELSE;}
-in                                              { printf("KEYWORD in: %s\n", yytext); return IN;}
-to                                              { printf("KEYWORD in: %s\n", yytext); return TO;}
-for                                             { printf("KEYWORD for: %s\n", yytext); return FOR;}
-while                                           { printf("KEYWORD while: %s\n", yytext); return WHILE;}
-function                                        { printf("KEYWORD function: %s\n", yytext); return FUNCTION;}
-procedure                                       { printf("KEYWORD procedure: %s\n", yytext); return PROCEDURE;}
-var                                             { printf("KEYWORD var: %s\n", yytext); return VAR;}
-return                                          { printf("KEYWORD return: %s\n", yytext); return RETURN;}
+#[^\n]*                                         { if(lex_dbg) printf("ONE STRING COMMENT: %s\n", yytext); }
+begin                                           { if(lex_dbg) printf("KEYWORD begin: %s\n", yytext); return BEGIN_KW;}
+end                                             { if(lex_dbg) printf("KEYWORD end: %s\n", yytext); return END;}
+if                                              { if(lex_dbg) printf("KEYWORD if: %s\n", yytext); return IF;}
+else                                            { if(lex_dbg) printf("KEYWORD else: %s\n", yytext); return ELSE;}
+in                                              { if(lex_dbg) printf("KEYWORD in: %s\n", yytext); return IN;}
+to                                              { if(lex_dbg) printf("KEYWORD in: %s\n", yytext); return TO;}
+for                                             { if(lex_dbg) printf("KEYWORD for: %s\n", yytext); return FOR;}
+while                                           { if(lex_dbg) printf("KEYWORD while: %s\n", yytext); return WHILE;}
+function                                        { if(lex_dbg) printf("KEYWORD function: %s\n", yytext); return FUNCTION;}
+procedure                                       { if(lex_dbg) printf("KEYWORD procedure: %s\n", yytext); return PROCEDURE;}
+var                                             { if(lex_dbg) printf("KEYWORD var: %s\n", yytext); return VAR;}
+return                                          { if(lex_dbg) printf("KEYWORD return: %s\n", yytext); return RETURN;}
 
-Rect                                            { printf("KEYWORD Rect: %s\n", yytext); return RECT;}
-Oval                                            { printf("KEYWORD Oval: %s\n", yytext); return OVAL;}
-Line                                            { printf("KEYWORD Line: %s\n", yytext); return LINE;}
-Polyline                                        { printf("KEYWORD Polyline: %s\n", yytext); return POLYLINE;}
-Text                                            { printf("KEYWORD Text: %s\n", yytext); return TEXT;}
+Rect                                            { if(lex_dbg) printf("KEYWORD Rect: %s\n", yytext); return RECT;}
+Oval                                            { if(lex_dbg) printf("KEYWORD Oval: %s\n", yytext); return OVAL;}
+Line                                            { if(lex_dbg) printf("KEYWORD Line: %s\n", yytext); return LINE;}
+Polyline                                        { if(lex_dbg) printf("KEYWORD Polyline: %s\n", yytext); return POLYLINE;}
+Text                                            { if(lex_dbg) printf("KEYWORD Text: %s\n", yytext); return TEXT;}
 
-E                                               { printf("CONSTANT E: %s\n", yytext); return E;}
-PI                                              { printf("CONSTANT PI: %s\n", yytext); return PI;}
-true                                            { printf("CONSTANT true: %s\n", yytext); yylval.boolean = strdup(yytext); return TRUE;}
-false                                           { printf("CONSTANT false: %s\n", yytext); yylval.boolean = strdup(yytext); return FALSE;}
+E                                               { if(lex_dbg) printf("CONSTANT E: %s\n", yytext); return E;}
+PI                                              { if(lex_dbg) printf("CONSTANT PI: %s\n", yytext); return PI;}
+true                                            { if(lex_dbg) printf("CONSTANT true: %s\n", yytext); yylval.boolean = strdup(yytext); return TRUE;}
+false                                           { if(lex_dbg) printf("CONSTANT false: %s\n", yytext); yylval.boolean = strdup(yytext); return FALSE;}
 
-String                                          { printf("TYPE String: %s\n", yytext); yylval.string = strdup(yytext); return STRING;}
-Integer                                         { printf("TYPE Integer: %s\n", yytext); yylval.string = strdup(yytext); return INTEGER;}
-Double                                          { printf("TYPE Double: %s\n", yytext); yylval.string = strdup(yytext); return DOUBLE;}
-Boolean                                         { printf("TYPE Boolean: %s\n", yytext); yylval.string = strdup(yytext); return BOOLEAN;}
-Shape                                           { printf("TYPE Shape: %s\n", yytext); yylval.string = strdup(yytext); return SHAPE;}
-Context                                         { printf("TYPE Context: %s\n", yytext); yylval.string = strdup(yytext); return CONTEXT;}
+String                                          { if(lex_dbg) printf("TYPE String: %s\n", yytext); yylval.string = strdup(yytext); return STRING;}
+Integer                                         { if(lex_dbg) printf("TYPE Integer: %s\n", yytext); yylval.string = strdup(yytext); return INTEGER;}
+Double                                          { if(lex_dbg) printf("TYPE Double: %s\n", yytext); yylval.string = strdup(yytext); return DOUBLE;}
+Boolean                                         { if(lex_dbg) printf("TYPE Boolean: %s\n", yytext); yylval.string = strdup(yytext); return BOOLEAN;}
+Shape                                           { if(lex_dbg) printf("TYPE Shape: %s\n", yytext); yylval.string = strdup(yytext); return SHAPE;}
+Context                                         { if(lex_dbg) printf("TYPE Context: %s\n", yytext); yylval.string = strdup(yytext); return CONTEXT;}
 
-[,]                                             { printf("OPERATOR COMMA : %s\n", yytext); return COMMA;}
-[:]                                             { printf("OPERATOR COLON : %s\n", yytext); return COLON;}
-[(]                                             { printf("OPEN ROUND BRACKETS : %s\n", yytext); return OPEN_ROUND_BRACKETS;}
-[)]                                             { printf("CLOSE ROUND BRACKETS : %s\n", yytext); return CLOSE_ROUND_BRACKETS;}
-[[]                                             { printf("OPEN SQUARE BRACKETS : %s\n", yytext); return OPEN_SQUARE_BRACKETS;}
-[]]                                             { printf("CLOSE SQUARE BRACKETS : %s\n", yytext); return CLOSE_SQUARE_BRACKETS;}
-[:][=]                                          { printf("OPERATOR ASSIGN : %s\n", yytext); return ASSIGN;}
+[,]                                             { if(lex_dbg) printf("OPERATOR COMMA : %s\n", yytext); return COMMA;}
+[:]                                             { if(lex_dbg) printf("OPERATOR COLON : %s\n", yytext); return COLON;}
+[(]                                             { if(lex_dbg) printf("OPEN ROUND BRACKETS : %s\n", yytext); return OPEN_ROUND_BRACKETS;}
+[)]                                             { if(lex_dbg) printf("CLOSE ROUND BRACKETS : %s\n", yytext); return CLOSE_ROUND_BRACKETS;}
+[[]                                             { if(lex_dbg) printf("OPEN SQUARE BRACKETS : %s\n", yytext); return OPEN_SQUARE_BRACKETS;}
+[]]                                             { if(lex_dbg) printf("CLOSE SQUARE BRACKETS : %s\n", yytext); return CLOSE_SQUARE_BRACKETS;}
+[:][=]                                          { if(lex_dbg) printf("OPERATOR ASSIGN : %s\n", yytext); return ASSIGN;}
 
-[&][&]                                          { printf("OPERATOR LOGICAL AND : %s\n", yytext); yylval.string = strdup(yytext); return AND;}
-[|][|]                                          { printf("OPERATOR LOGICAL OR : %s\n", yytext); yylval.string = strdup(yytext); return OR;}
-[!]                                             { printf("OPERATOR LOGICAL NOT : %s\n", yytext); yylval.string = strdup(yytext); return NOT;}
+[&][&]                                          { if(lex_dbg) printf("OPERATOR LOGICAL AND : %s\n", yytext); yylval.string = strdup(yytext); return AND;}
+[|][|]                                          { if(lex_dbg) printf("OPERATOR LOGICAL OR : %s\n", yytext); yylval.string = strdup(yytext); return OR;}
+[!]                                             { if(lex_dbg) printf("OPERATOR LOGICAL NOT : %s\n", yytext); yylval.string = strdup(yytext); return NOT;}
 
-">="                                            { printf("OPERATOR BIGGER OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER_OR_EQUALS;}
-"<="                                            { printf("OPERATOR LESS OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return LESS_OR_EQUALS; }
-[=]                                             { printf("OPERATOR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return EQUALS;}
-[>]                                             { printf("OPERATOR BIGGER : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER;}
-[<]                                             { printf("OPERATOR LESS : %s\n", yytext); yylval.string = strdup(yytext); return LESS;}
+">="                                            { if(lex_dbg) printf("OPERATOR BIGGER OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER_OR_EQUALS;}
+"<="                                            { if(lex_dbg) printf("OPERATOR LESS OR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return LESS_OR_EQUALS; }
+[=]                                             { if(lex_dbg) printf("OPERATOR EQUALS : %s\n", yytext); yylval.string = strdup(yytext); return EQUALS;}
+[>]                                             { if(lex_dbg) printf("OPERATOR BIGGER : %s\n", yytext); yylval.string = strdup(yytext); return BIGGER;}
+[<]                                             { if(lex_dbg) printf("OPERATOR LESS : %s\n", yytext); yylval.string = strdup(yytext); return LESS;}
 
-[+]                                             { printf("OPERATOR PLUS : %s\n", yytext); yylval.string = strdup(yytext); return PLUS;}
-[-]                                             { printf("OPERATOR MINUS : %s\n", yytext); yylval.string = strdup(yytext); return MINUS;}
-mod                                             { printf("OPERATOR mod : %s\n", yytext); yylval.string = strdup(yytext); return MOD;}
-[*]                                             { printf("OPERATOR MULT : %s\n", yytext); yylval.string = strdup(yytext); return MULT;}
-[/]                                             { printf("OPERATOR DIV : %s\n", yytext); yylval.string = strdup(yytext); return DIV;}
+[+]                                             { if(lex_dbg) printf("OPERATOR PLUS : %s\n", yytext); yylval.string = strdup(yytext); return PLUS;}
+[-]                                             { if(lex_dbg) printf("OPERATOR MINUS : %s\n", yytext); yylval.string = strdup(yytext); return MINUS;}
+mod                                             { if(lex_dbg) printf("OPERATOR mod : %s\n", yytext); yylval.string = strdup(yytext); return MOD;}
+[*]                                             { if(lex_dbg) printf("OPERATOR MULT : %s\n", yytext); yylval.string = strdup(yytext); return MULT;}
+[/]                                             { if(lex_dbg) printf("OPERATOR DIV : %s\n", yytext); yylval.string = strdup(yytext); return DIV;}
 
 
 "'''"                                           { msl_buffer[msl_buf_position++] = '\"'; BEGIN(MULTIPLE_STRING); }
@@ -89,10 +91,10 @@ mod                                             { printf("OPERATOR mod : %s\n", 
     return STRING_LITERAL;
 }
 
-["][^"]*["]                                     { printf("STRING LITERAL: %s\n", yytext); yylval.string = strdup(yytext); return STRING_LITERAL;}
-[0-9]+                                          { printf("INTEGER NUMBER: %s\n", yytext); yylval.num = atoi(yytext); return INTEGER_NUMBER;}
-[0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { printf("DOUBLE NUMBER: %s\n", yytext); yylval.frac = atof(yytext); return DOUBLE_NUMBER;}
-[a-zA-Z_][a-zA-Z_0-9]*                          { printf("IDENTIFIER: %s\n", yytext); yylval.string = strdup(yytext); return IDENTIFIER;}
+["][^"]*["]                                     { if(lex_dbg) printf("STRING LITERAL: %s\n", yytext); yylval.string = strdup(yytext); return STRING_LITERAL;}
+[0-9]+                                          { if(lex_dbg) printf("INTEGER NUMBER: %s\n", yytext); yylval.num = atoi(yytext); return INTEGER_NUMBER;}
+[0-9]+[.][0-9]+|[0-9]+[.]|[.][0-9]+             { if(lex_dbg) printf("DOUBLE NUMBER: %s\n", yytext); yylval.frac = atof(yytext); return DOUBLE_NUMBER;}
+[a-zA-Z_][a-zA-Z_0-9]*                          { if(lex_dbg) printf("IDENTIFIER: %s\n", yytext); yylval.string = strdup(yytext); return IDENTIFIER;}
 
 [ \t\n\v\f\r]                                   {  }
 .                                               {     fprintf(stderr, "Error! Incorrect symbol: '%s' on line %d\n", yytext, yylineno); YY_FATAL_ERROR("Incorrect symbol"); }

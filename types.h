@@ -199,6 +199,10 @@ struct SubprogramDeclaration {
     UserType return_type;
 };
 
+inline bool dbg = false;
+inline bool syntax_errors = false;
+inline bool semantic_errors = false;
+
 inline std::unordered_map<std::string, SubprogramDeclaration *> subprogram_declarations;
 
 inline Declaration *declaration_root = nullptr;

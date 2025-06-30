@@ -117,24 +117,30 @@ void yyerror(char *);
 
 program: sub_programs {
     root_node_ptr = $1;
+    if (syntax_errors) {
+        exit(-1);
+    }
     print_tree();
     make_semantic(root_node_ptr);
+    if (semantic_errors) {
+        exit(-1);
+    }
     print_tree();
     generate_code(root_node_ptr);
 }
 
-sub_programs: { printf("End of the sub_program "); $$ = create_node(NT_PROGRAM); }
-      | sub_programs function { printf("End of the function "); $$ = add_equal_node($1, $2); }
-      | sub_programs procedure { printf("End of the procedure "); $$ = add_equal_node($1, $2); }
+sub_programs: { $$ = create_node(NT_PROGRAM); }
+      | sub_programs function { $$ = add_equal_node($1, $2); }
+      | sub_programs procedure { $$ = add_equal_node($1, $2); }
       ;
 
 function: FUNCTION IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS COLON user_var_type BEGIN_KW body_list RETURN expression END {
     $$ = add_function_node($2, (UserType) $7, $4, $9, $11);
 };
 
-procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS BEGIN_KW body_list END {
-    $$ = add_procedure_node($2, $4, $7);
-};
+procedure: PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = add_procedure_node($2, $4, $7); }
+    | PROCEDURE IDENTIFIER OPEN_ROUND_BRACKETS subprog_params CLOSE_ROUND_BRACKETS error END { yyerrok; fprintf(stderr, "Incorrect procedure signature\n")}
+    ;
 
 
 subprog_params: { $$ = create_node(NT_SUBPROG_PARAMS); }
@@ -143,11 +149,11 @@ subprog_params: { $$ = create_node(NT_SUBPROG_PARAMS); }
       ;
 
 enumeration: { $$ = create_node(NT_ENUMERATION); }
-      | enumeration COMMA expression { printf("End of the enumeration\n"); $$ = add_equal_node($1, $3); }
-      | expression { printf("End of the enumeration\n"); $$ = create_nodes(NT_ENUMERATION, {$1});}
+      | enumeration COMMA expression { $$ = add_equal_node($1, $3); }
+      | expression { $$ = create_nodes(NT_ENUMERATION, {$1});}
       ;
 
-function_body: body_list RETURN expression { printf("End of the function_body\n"); $$ = create_nodes(NT_FUNCTION_BODY, {$1, $3}); }
+function_body: body_list RETURN expression { $$ = create_nodes(NT_FUNCTION_BODY, {$1, $3}); }
       ;
 
 body_list: { $$ = create_node(NT_BODY_LIST); }
@@ -156,7 +162,6 @@ body_list: { $$ = create_node(NT_BODY_LIST); }
 
 body: declare_variable { $$ = create_nodes(NT_BODY, {$1}); }
       | assign_variable { $$ = create_nodes(NT_BODY, {$1}); }
-      | expression { $$ = create_nodes(NT_BODY, {$1}); }
       | while_loop { $$ = create_nodes(NT_BODY, {$1}); }
       | for_loop { $$ = create_nodes(NT_BODY, {$1}); }
       | comment { $$ = nullptr; }
@@ -196,13 +201,24 @@ expression: expression PLUS expression { $$ = add_expression_node($1, $3, $2) }
     | IDENTIFIER { $$ = add_expression_node($1); }
     ;
 
-while_loop: WHILE OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); };
+while_loop: WHILE OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { $$ = create_nodes(NT_WHILE_LOOP, {$3, $6}); }
+            | WHILE OPEN_ROUND_BRACKETS error CLOSE_ROUND_BRACKETS BEGIN_KW body_list END { yyerrok; fprintf(stderr, "Incorrect while condition\n")}
+            | WHILE OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW error END { yyerrok; fprintf(stderr, "Incorrect while body\n")}
+            | WHILE error END { yyerrok; fprintf(stderr, "Incorrect while loop syntax\n")}
+            ;
 
-for_loop: FOR IDENTIFIER IN expression TO expression BEGIN_KW body_list END { $$ = add_for_loop($2, $4, $6, $8); };
+for_loop: FOR IDENTIFIER IN expression TO expression BEGIN_KW body_list END { $$ = add_for_loop($2, $4, $6, $8); }
+            | FOR IDENTIFIER IN error TO expression BEGIN_KW body_list END { yyerrok; fprintf(stderr, "Incorrect syntax between IN..TO\n")}
+            | FOR IDENTIFIER IN expression TO error BEGIN_KW body_list END { yyerrok; fprintf(stderr, "Incorrect syntax after TO...\n")}
+            | FOR IDENTIFIER IN expression TO expression BEGIN_KW error END { yyerrok; fprintf(stderr, "Incorrect syntax in for body\n")}
+            | FOR error END { yyerrok; fprintf(stderr, "Incorrect for loop syntax\n")}
+            ;
 
-invocation: IDENTIFIER OPEN_ROUND_BRACKETS enumeration CLOSE_ROUND_BRACKETS { printf("End of invocation\n"); $$ = add_invocation($1, $3); };
+invocation: IDENTIFIER OPEN_ROUND_BRACKETS enumeration CLOSE_ROUND_BRACKETS { $$ = add_invocation($1, $3); }
+        | IDENTIFIER OPEN_ROUND_BRACKETS error CLOSE_ROUND_BRACKETS { yyerrok; fprintf(stderr, "Incorrect invocation syntax in param enumeration\n")}
+        ;
 
-comment: ONE_STRING_COMMENT { printf("Comment ignoring\n") };
+comment: ONE_STRING_COMMENT { };
 
 user_var_type: STRING { $$ = to_user_type($1); }
         | INTEGER { $$ = to_user_type($1); }
@@ -219,11 +235,21 @@ create_line_node: LINE OPEN_ROUND_BRACKETS IDENTIFIER COMMA expression COMMA exp
 if_else_statement: IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec IF { $$ = create_nodes(NT_IF_BLOCK, {$3, $6});}
         | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END ELSE if_else_statement { $$ = create_nodes(NT_IF_BLOCK, {$3, $6, $9});}
         | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END ELSE BEGIN_KW body_list END { $$ = create_nodes(NT_IF_BLOCK, {$3, $6, $10});}
+
+        | IF OPEN_ROUND_BRACKETS error CLOSE_ROUND_BRACKETS BEGIN_KW body_list END %prec IF { yyerrok; fprintf(stderr, "Incorrect if-else condition")}
+        | IF OPEN_ROUND_BRACKETS error CLOSE_ROUND_BRACKETS BEGIN_KW body_list END ELSE BEGIN_KW body_list END { yyerrok; fprintf(stderr, "Incorrect if-else condition")}
+
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW body_list END ELSE BEGIN_KW error END { yyerrok; fprintf(stderr, "Incorrect else body")}
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW error END ELSE BEGIN_KW body_list END { yyerrok; fprintf(stderr, "Incorrect then body")}
+
+        | IF OPEN_ROUND_BRACKETS expression CLOSE_ROUND_BRACKETS BEGIN_KW error END %prec IF { yyerrok; fprintf(stderr, "Incorrect then body")}
+        | IF error END { yyerrok; fprintf(stderr, "Incorrect if-else statement syntax")}
         ;
 
 
 %%
 
 void yyerror(char *s) {
+    syntax_errors = true;
     fprintf(stderr, "Error: %s\n", s);
 }
