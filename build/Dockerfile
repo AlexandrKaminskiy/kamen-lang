@@ -8,6 +8,7 @@ RUN apt update && apt install -y \
     && apt clean
 
 WORKDIR /build
-COPY . .
+COPY ../out.asm .
+COPY extern.cpp .
 RUN rm -rf *.o
 RUN chmod +x build.sh
