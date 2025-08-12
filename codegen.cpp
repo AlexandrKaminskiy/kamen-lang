@@ -820,7 +820,7 @@ std::string add_extern_decl() {
     return result;
 }
 void generate_code(AstNode *root) {
-    std::ofstream file("../out.asm");
+    std::ofstream file("out.asm");
     file << add_extern_decl();
     file << "global main\n";
     file << "section .text\n";

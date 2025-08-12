@@ -1,9 +1,7 @@
-cd build_
-cp -r .. .
+#!/bin/sh
+set -e
 
-bison -d parser.y
-flex lexer.l
-g++ -g -o calc example.tab.c lex.yy.c codegen.cpp syntax.cpp types.cpp semantic.cpp -L/opt/homebrew/opt/flex/lib -lfl
-ls
-
-./calc ../test.txt
+./kl $1
+mv out.asm ./run-env
+cd run-env
+docker compose up
