@@ -1,0 +1,10 @@
+version: '3.0'
+services:
+  svg-drawer:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/build
+    command:
+      - ./build.sh
