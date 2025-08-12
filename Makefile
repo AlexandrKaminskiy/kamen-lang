@@ -1,4 +1,4 @@
-compile:
+build:
 	sh ./build.sh
 run:
 	sh ./run.sh $(word 2, $(MAKECMDGOALS))
