@@ -21,7 +21,7 @@ begin
         AddToContext(context, circle)
     end
 
-    text := DrawText("Hello, Artyom!", 50.0, 200.0, 20.0, "serif")
+    text := DrawText("Hello, World!", 50.0, 200.0, 20.0, "serif")
     AddToContext(context, text)
     Fill(text, 200, 100, 100)
 
